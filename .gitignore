@@ -1,0 +1,23 @@
+# Node / Frontend
+node_modules/
+.next/
+dist/
+build/
+
+# Backend / Python
+env/
+venv/
+__pycache__/
+
+# Environment variables
+.env
+.env.local
+
+# Logs & cache
+AppData/
+npm-cache/
+*.log
+
+# OS / Editor
+.DS_Store
+.vscode/
