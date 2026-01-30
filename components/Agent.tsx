@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
-import { interviewer } from "@/constants";
+import { interviewer, RESUME_INTERVIEWER_PROMPT, GENERAL_INTERVIEWER_PROMPT } from "@/constants";
 import { createFeedback, startInterview, updateInterviewProgress } from "@/lib/actions/general.action";
 
 enum CallStatus {
@@ -32,6 +32,10 @@ const Agent = ({
   questions,
   gender,
   currentQuestionIndex: currentQuestionIndexProp,
+  resumeText,
+  role,
+  level,
+  techstack,
 }: AgentProps) => {
   const router = useRouter();
   const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
@@ -145,11 +149,53 @@ const Agent = ({
           .join("\n");
       }
 
-      await vapi.start(interviewer, {
-        variableValues: {
-          questions: formattedQuestions,
-        },
-      });
+      if (resumeText) {
+        const resumeInterviewer = {
+          ...interviewer,
+          model: {
+            ...interviewer.model,
+            messages: [
+              {
+                role: "system",
+                content: RESUME_INTERVIEWER_PROMPT,
+              },
+            ],
+          },
+        } as any;
+
+        await vapi.start(resumeInterviewer, {
+          variableValues: {
+            resumeText: resumeText,
+          },
+        });
+      } else if (formattedQuestions) {
+        await vapi.start(interviewer, {
+          variableValues: {
+            questions: formattedQuestions,
+          },
+        });
+      } else {
+        const generalInterviewer = {
+          ...interviewer,
+          model: {
+            ...interviewer.model,
+            messages: [
+              {
+                role: "system",
+                content: GENERAL_INTERVIEWER_PROMPT,
+              },
+            ],
+          },
+        } as any;
+
+        await vapi.start(generalInterviewer, {
+          variableValues: {
+            role: role || "Software Engineer",
+            level: level || "Mid",
+            techstack: techstack ? techstack.join(", ") : "General",
+          },
+        });
+      }
     }
   };
 
@@ -200,8 +246,8 @@ const Agent = ({
             </p>
           </div>
           <div className="w-full h-2 bg-dark-200 rounded-full overflow-hidden border border-light-800">
-            <div 
-              className="h-full bg-primary-200 transition-all duration-500" 
+            <div
+              className="h-full bg-primary-200 transition-all duration-500"
               style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
             />
           </div>
@@ -212,7 +258,7 @@ const Agent = ({
         <div className="flex flex-col gap-4 mt-8">
           <div className="flex justify-between items-center">
             <h3>{isCodingMode ? "Coding Mode" : "Voice Mode"}</h3>
-            <button 
+            <button
               onClick={() => setIsCodingMode(!isCodingMode)}
               className="btn-secondary text-xs py-1 h-8"
             >
@@ -221,7 +267,7 @@ const Agent = ({
           </div>
 
           {questions && questions.length > 0 && currentQuestionIndex < questions.length - 1 && (
-            <button 
+            <button
               onClick={async () => {
                 const newIndex = currentQuestionIndex + 1;
                 setCurrentQuestionIndex(newIndex);

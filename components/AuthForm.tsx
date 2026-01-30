@@ -24,8 +24,8 @@ const authFormSchema = (type: FormType) => {
   return z.object({
     name: type === "sign-up" ? z.string().min(3, "Name must be at least 3 characters") : z.string().optional(),
     email: z.string().email("Invalid email address"),
-    password: type === "sign-up" 
-      ? z.string().min(6, "Password must be at least 6 characters") 
+    password: type === "sign-up"
+      ? z.string().min(6, "Password must be at least 6 characters")
       : z.string().min(1, "Password is required"),
     gender: type === "sign-up" ? z.enum(["male", "female"], {
       errorMap: () => ({ message: "Please select your gender" })
@@ -131,9 +131,9 @@ const AuthForm = ({ type }: { type: FormType }) => {
       console.error("Firebase Auth Error:", error);
       console.error("Error Code:", error.code);
       console.error("Error Message:", error.message);
-      
+
       let errorMessage = "An error occurred. Please try again.";
-      
+
       if (error.code === "auth/user-not-found" || error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
         errorMessage = "Invalid email or password. Please check your credentials and try again.";
       } else if (error.code === "auth/email-already-in-use") {
@@ -145,7 +145,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       toast.error(errorMessage);
     }
   };
@@ -154,8 +154,8 @@ const AuthForm = ({ type }: { type: FormType }) => {
     <div className="card-border lg:min-w-[566px]">
       <div className="flex flex-col gap-6 card py-14 px-10">
         <div className="flex flex-row gap-2 justify-center">
-          <Image src="/logo.svg" alt="logo" height={32} width={38} />
-          <h2 className="text-primary-100">PrepWise</h2>
+          <Image src="/logo.png" alt="logo" height={48} width={56} />
+          <h2 className="text-primary-100">SmartInterview</h2>
         </div>
 
         <h3>Practice job interviews with AI</h3>
@@ -193,7 +193,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
 
             {isSignIn && (
               <div className="flex justify-end -mt-4">
-                <button 
+                <button
                   type="button"
                   onClick={() => toast.info("Password reset feature coming soon!")}
                   className="text-xs text-primary-100 hover:underline"
@@ -207,7 +207,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
               <>
                 <div className="flex flex-col gap-2">
                   <label className="label text-sm font-medium">Gender</label>
-                  <select 
+                  <select
                     {...form.register("gender")}
                     className="input bg-dark-200 rounded-full min-h-12 px-5 text-light-100 border-none outline-none"
                   >
@@ -218,7 +218,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
 
                 <div className="flex flex-col gap-2">
                   <label className="label text-sm font-medium">Career Stage</label>
-                  <select 
+                  <select
                     {...form.register("careerStage")}
                     className="input bg-dark-200 rounded-full min-h-12 px-5 text-light-100 border-none outline-none"
                   >

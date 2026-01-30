@@ -60,23 +60,27 @@ const UserDropdown = ({ user }: UserDropdownProps) => {
             <p className="text-sm font-semibold text-white truncate">{user.name}</p>
           </div>
 
-          <Link
-            href="/profile"
-            className="flex items-center gap-3 px-4 py-3 text-sm text-light-100 hover:bg-primary-200/10 hover:text-primary-200 transition-colors"
-            onClick={() => setIsOpen(false)}
+          <div
+            className="flex items-center gap-3 px-4 py-3 text-sm text-light-100 hover:bg-primary-200/10 hover:text-primary-200 transition-colors cursor-pointer"
+            onClick={() => {
+              setIsOpen(false);
+              router.push("/profile");
+            }}
           >
             <User size={18} />
-            <span>My Profile</span>
-          </Link>
+            <span>User Details</span>
+          </div>
 
-          <Link
-            href="/reports"
-            className="flex items-center gap-3 px-4 py-3 text-sm text-light-100 hover:bg-primary-200/10 hover:text-primary-200 transition-colors"
-            onClick={() => setIsOpen(false)}
+          <div
+            className="flex items-center gap-3 px-4 py-3 text-sm text-light-100 hover:bg-primary-200/10 hover:text-primary-200 transition-colors cursor-pointer"
+            onClick={() => {
+              setIsOpen(false);
+              router.push("/reports");
+            }}
           >
             <FileText size={18} />
-            <span>My Reports</span>
-          </Link>
+            <span>Reports</span>
+          </div>
 
           <button
             onClick={handleLogout}

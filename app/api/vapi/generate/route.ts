@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 import { db } from "@/firebase/admin";
-import { getRandomInterviewCover } from "@/lib/utils";
+import { getInterviewCover } from "@/lib/utils";
 
 const genAI = new GoogleGenerativeAI(
   process.env.GOOGLE_GENERATIVE_AI_API_KEY!
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
       questions: JSON.parse(jsonString),
       userId: userid,
       finalized: true,
-      coverImage: getRandomInterviewCover(),
+      coverImage: getInterviewCover(userid || "default"),
       createdAt: new Date().toISOString(),
     };
 

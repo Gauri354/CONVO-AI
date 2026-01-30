@@ -31,6 +31,7 @@ interface Interview {
   finalized: boolean;
   status?: "scheduled" | "in-progress" | "cancelled" | "completed";
   currentQuestionIndex?: number;
+  resumeText?: string;
 }
 
 interface CreateFeedbackParams {
@@ -69,6 +70,10 @@ interface AgentProps {
   questions?: string[];
   gender?: "male" | "female";
   currentQuestionIndex?: number;
+  resumeText?: string;
+  role?: string;
+  level?: string;
+  techstack?: string[];
 }
 
 interface RouteParams {

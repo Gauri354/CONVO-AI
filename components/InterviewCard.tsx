@@ -1,11 +1,12 @@
 import dayjs from "dayjs";
 import Link from "next/link";
 import Image from "next/image";
+import { LayoutTemplate, Server, Layers, Smartphone, Cloud, Database, Shield, BrainCircuit, Users, Network, Code } from "lucide-react";
 
 import { Button } from "./ui/button";
 import DisplayTechIcons from "./DisplayTechIcons";
 
-import { cn, getRandomInterviewCover } from "@/lib/utils";
+import { cn, getInterviewCover } from "@/lib/utils";
 import { getFeedbackByInterviewId } from "@/lib/actions/general.action";
 import CancelInterviewButton from "./CancelInterviewButton";
 
@@ -22,9 +23,9 @@ const InterviewCard = async ({
   const feedback =
     userId && interviewId
       ? await getFeedbackByInterviewId({
-          interviewId,
-          userId,
-        })
+        interviewId,
+        userId,
+      })
       : null;
 
   const normalizedType = /mix/gi.test(type) ? "Mixed" : type;
@@ -59,14 +60,23 @@ const InterviewCard = async ({
             <p className="badge-text ">{normalizedType}</p>
           </div>
 
-          {/* Cover Image */}
-          <Image
-            src={getRandomInterviewCover()}
-            alt="cover-image"
-            width={90}
-            height={90}
-            className="rounded-full object-fit size-[90px]"
-          />
+          {/* Icon based on Role */}
+          <div className="rounded-full size-[90px] flex items-center justify-center bg-light-800">
+            {(() => {
+              const r = role.toLowerCase();
+              if (r.includes("frontend") || r.includes("ui")) return <LayoutTemplate size={40} className="text-primary-500" />;
+              if (r.includes("backend") || r.includes("api")) return <Server size={40} className="text-primary-500" />;
+              if (r.includes("fullstack")) return <Layers size={40} className="text-primary-500" />;
+              if (r.includes("mobile") || r.includes("ios") || r.includes("android")) return <Smartphone size={40} className="text-primary-500" />;
+              if (r.includes("devops") || r.includes("cloud") || r.includes("sre")) return <Cloud size={40} className="text-primary-500" />;
+              if (r.includes("data") || r.includes("analyst")) return <Database size={40} className="text-primary-500" />;
+              if (r.includes("security") || r.includes("cyber")) return <Shield size={40} className="text-primary-500" />;
+              if (r.includes("machine") || r.includes("ai") || r.includes("model")) return <BrainCircuit size={40} className="text-primary-500" />;
+              if (r.includes("manager") || r.includes("lead") || r.includes("hr")) return <Users size={40} className="text-primary-500" />;
+              if (r.includes("system") || r.includes("arch")) return <Network size={40} className="text-primary-500" />;
+              return <Code size={40} className="text-primary-500" />;
+            })()}
+          </div>
 
           {/* Interview Role */}
           <h3 className="mt-5 capitalize">{role} Interview</h3>
@@ -87,7 +97,7 @@ const InterviewCard = async ({
               <Image src="/star.svg" width={22} height={22} alt="star" />
               <p>
                 {status === "in-progress"
-                  ? `Q ${(currentQuestionIndex || 0) + 1} / 5` 
+                  ? `Q ${(currentQuestionIndex || 0) + 1} / 5`
                   : `${feedback?.totalScore || "---"}/100`}
               </p>
             </div>
@@ -95,10 +105,10 @@ const InterviewCard = async ({
 
           {/* Feedback or Placeholder Text */}
           <p className="line-clamp-2 mt-5">
-            {isCancelled 
+            {isCancelled
               ? "This interview has been cancelled."
               : feedback?.finalAssessment ||
-                "You haven't taken this interview yet. Take it now to improve your skills."}
+              "You haven't taken this interview yet. Take it now to improve your skills."}
           </p>
         </div>
 

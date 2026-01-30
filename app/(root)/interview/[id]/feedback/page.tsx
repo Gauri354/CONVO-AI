@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/actions/auth.action";
 import { cn } from "@/lib/utils";
+import PrintButton from "@/components/PrintButton";
 
 const Feedback = async ({ params }: RouteParams) => {
   const { id } = await params;
@@ -80,8 +81,8 @@ const Feedback = async ({ params }: RouteParams) => {
                   <span className="font-bold">{category.score}%</span>
                 </div>
                 <div className="w-full h-2 bg-dark-200 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-primary-200 transition-all duration-1000" 
+                  <div
+                    className="h-full bg-primary-200 transition-all duration-1000"
                     style={{ width: `${category.score}%` }}
                   />
                 </div>
@@ -151,7 +152,7 @@ const Feedback = async ({ params }: RouteParams) => {
               {feedback.codingAnalysis.isOptimal ? "Optimal Solution" : "Sub-Optimal Solution"}
             </span>
           </div>
-          
+
           <div className="flex flex-col gap-6">
             <div>
               <h3 className="text-lg font-semibold text-primary-100 mb-2">Explanation</h3>
@@ -177,13 +178,8 @@ const Feedback = async ({ params }: RouteParams) => {
         <Button className="btn-secondary flex-1" asChild>
           <Link href="/">Back to Dashboard</Link>
         </Button>
-        
-        <Button 
-          className="btn-secondary flex-1" 
-          onClick={() => window.print()}
-        >
-          Download PDF Report
-        </Button>
+
+        <PrintButton />
 
         <Button className="btn-primary flex-1" asChild>
           <Link href={`/interview/${id}`}>Retake Interview</Link>

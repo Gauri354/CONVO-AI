@@ -1,10 +1,11 @@
 import { getCurrentUser } from "@/lib/actions/auth.action";
 import ProfileForm from "@/components/ProfileForm";
 import Image from "next/image";
+import { redirect } from "next/navigation";
 
 const ProfilePage = async () => {
   const user = await getCurrentUser();
-  if (!user) return null;
+  if (!user) redirect("/sign-in");
 
   return (
     <div className="flex flex-col gap-10 max-w-4xl mx-auto">

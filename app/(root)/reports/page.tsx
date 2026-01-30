@@ -2,12 +2,13 @@ import dayjs from "dayjs";
 import Link from "next/link";
 import { FileText, Download, ExternalLink } from "lucide-react";
 import { getCurrentUser } from "@/lib/actions/auth.action";
+import { redirect } from "next/navigation";
 import { getAllFeedbacksByUserId, getInterviewById } from "@/lib/actions/general.action";
 import { Button } from "@/components/ui/button";
 
 const ReportsPage = async () => {
   const user = await getCurrentUser();
-  if (!user) return null;
+  if (!user) redirect("/sign-in");
 
   const feedbacks = await getAllFeedbacksByUserId(user.id);
 
@@ -32,8 +33,8 @@ const ReportsPage = async () => {
       <div className="grid grid-cols-1 gap-4">
         {reports.length > 0 ? (
           reports.map((report) => (
-            <div 
-              key={report.id} 
+            <div
+              key={report.id}
               className="card-border w-full"
             >
               <div className="card p-6 flex flex-row items-center justify-between max-sm:flex-col max-sm:gap-6">
@@ -61,7 +62,7 @@ const ReportsPage = async () => {
                       <span>View Report</span>
                     </Link>
                   </Button>
-                  
+
                   <Button className="btn-primary" asChild>
                     <Link href={`/interview/${report.interviewId}/feedback`} className="flex gap-2 items-center">
                       <Download size={16} />

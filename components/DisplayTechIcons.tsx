@@ -1,13 +1,31 @@
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
+import { mappings } from "@/constants";
 
-import { cn, getTechLogos } from "@/lib/utils";
+const techIconBaseURL = "https://cdn.jsdelivr.net/gh/devicons/devicon/icons";
 
-const DisplayTechIcons = async ({ techStack }: TechIconProps) => {
-  const techIcons = await getTechLogos(techStack);
+const normalizeTechName = (tech: string) => {
+  const key = tech.toLowerCase().replace(/\.js$/, "").replace(/\s+/g, "");
+  return mappings[key as keyof typeof mappings];
+};
+
+const DisplayTechIcons = ({ techStack }: { techStack: string[] }) => {
+  const [failedIcons, setFailedIcons] = useState<Record<string, boolean>>({});
+
+  const icons = techStack.slice(0, 3).map((tech) => {
+    const normalized = normalizeTechName(tech);
+    const url = normalized
+      ? `${techIconBaseURL}/${normalized}/${normalized}-original.svg`
+      : "/tech.svg";
+    return { tech, url };
+  });
 
   return (
     <div className="flex flex-row">
-      {techIcons.slice(0, 3).map(({ tech, url }, index) => (
+      {icons.map(({ tech, url }, index) => (
         <div
           key={tech}
           className={cn(
@@ -18,11 +36,12 @@ const DisplayTechIcons = async ({ techStack }: TechIconProps) => {
           <span className="tech-tooltip">{tech}</span>
 
           <Image
-            src={url}
+            src={failedIcons[tech] ? "/tech.svg" : url}
             alt={tech}
             width={100}
             height={100}
             className="size-5"
+            onError={() => setFailedIcons(prev => ({ ...prev, [tech]: true }))}
           />
         </div>
       ))}

@@ -84,29 +84,12 @@ export async function createFeedback(params: CreateFeedbackParams) {
 }
 
 export async function createInterview(params: any) {
-  const { role, level, techstack, type, userId, questions, status } = params;
+  const { role, level, techstack, type, userId, questions, status, resumeText } = params;
 
   try {
+    // For Vapi AI, we rely on the dynamic agent prompts rather than pre-generating questions text.
+    // This allows for a more adaptive, flowing interview experience.
     let interviewQuestions = questions || [];
-
-    if (interviewQuestions.length === 0) {
-      const prompt = `Generate 5 interview questions for a ${level} ${role} position. 
-      The tech stack is: ${techstack}. 
-      The interview type is ${type}.
-      Make the questions challenging and relevant.
-      
-      IMPORTANT: Return ONLY a raw JSON array of strings (the questions).
-      Example: ["Question 1", "Question 2", "Question 3", "Question 4", "Question 5"]
-      Ensure there are exactly 5 questions. No markdown blocks, no text other than the JSON.`;
-
-      const result = await model.generateContent(prompt);
-      const text = result.response.text();
-
-      if (!text) throw new Error("AI failed to generate questions.");
-
-      const jsonString = text.replace(/```json\n?|```/g, "").trim();
-      interviewQuestions = JSON.parse(jsonString);
-    }
 
     const interview = {
       role,
@@ -118,6 +101,7 @@ export async function createInterview(params: any) {
       finalized: false,
       status: status || "scheduled",
       createdAt: new Date().toISOString(),
+      resumeText: params.resumeText || "",
     };
 
     const docRef = await db.collection("interviews").add(interview);
