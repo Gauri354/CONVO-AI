@@ -44,7 +44,7 @@ const InterviewCard = async ({
   const isCancelled = status === "cancelled";
 
   return (
-    <div className="card-border w-[360px] max-sm:w-full min-h-96 relative">
+    <div className="card-border w-[360px] max-sm:w-full min-h-96 relative hover:scale-[1.02] hover:shadow-primary-500/20 hover:shadow-2xl transition-all duration-300">
       {!feedback && !isCancelled && interviewId && (
         <CancelInterviewButton interviewId={interviewId} />
       )}

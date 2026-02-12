@@ -138,21 +138,27 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   p {
     @apply text-light-100;
   }
+
   h2 {
     @apply text-3xl font-semibold;
   }
+
   h3 {
     @apply text-2xl font-semibold;
   }
+
   ul {
     @apply list-disc list-inside;
   }
+
   li {
     @apply text-light-100;
   }
@@ -160,7 +166,16 @@
 
 @layer components {
   .btn-call {
-    @apply inline-block px-7 py-3 font-bold text-sm leading-5 text-white transition-colors duration-150 bg-success-100 border border-transparent rounded-full shadow-sm focus:outline-none focus:shadow-2xl active:bg-success-200 hover:bg-success-200 min-w-28 cursor-pointer items-center justify-center overflow-visible;
+    @apply inline-block px-7 py-3 font-bold text-sm leading-5 text-white transition-colors duration-150 bg-success-100 border border-transparent rounded-full shadow-sm min-w-28 cursor-pointer items-center justify-center overflow-visible;
+
+    &:focus {
+      @apply outline-none shadow-2xl;
+    }
+
+    &:active,
+    &:hover {
+      @apply bg-success-200;
+    }
 
     .span {
       @apply bg-success-100 h-[85%] w-[65%];
@@ -168,21 +183,53 @@
   }
 
   .btn-disconnect {
-    @apply inline-block px-7 py-3 text-sm font-bold leading-5 text-white transition-colors duration-150 bg-destructive-100 border border-transparent rounded-full shadow-sm focus:outline-none focus:shadow-2xl active:bg-destructive-200 hover:bg-destructive-200 min-w-28;
+    @apply inline-block px-7 py-3 text-sm font-bold leading-5 text-white transition-colors duration-150 bg-destructive-100 border border-transparent rounded-full shadow-sm min-w-28;
+
+    &:focus {
+      @apply outline-none shadow-2xl;
+    }
+
+    &:active,
+    &:hover {
+      @apply bg-destructive-200;
+    }
   }
 
   .btn-upload {
     @apply flex min-h-14 w-full items-center justify-center gap-1.5 rounded-md;
   }
+
   .btn-primary {
-    @apply w-fit !bg-primary-200 !text-dark-100 hover:!bg-primary-200/80 !rounded-full !font-bold px-5 cursor-pointer min-h-10;
+    @apply w-fit !bg-primary-200 !text-dark-100 !rounded-full !font-bold px-5 cursor-pointer min-h-10;
+
+    &:hover {
+      @apply !bg-primary-200/80;
+    }
   }
+
   .btn-secondary {
-    @apply w-fit !bg-dark-200 !text-primary-200 hover:!bg-dark-200/80 !rounded-full !font-bold px-5 cursor-pointer min-h-10;
+    @apply w-fit !bg-dark-200 !text-primary-200 !rounded-full !font-bold px-5 cursor-pointer min-h-10;
+
+    &:hover {
+      @apply !bg-dark-200/80;
+    }
   }
 
   .btn-upload {
-    @apply bg-dark-200 rounded-full min-h-12 px-5 cursor-pointer border border-input  overflow-hidden;
+    @apply bg-dark-200 rounded-full min-h-12 px-5 cursor-pointer border border-input overflow-hidden;
+  }
+
+  .btn-shine {
+    @apply relative overflow-hidden;
+
+    &::after {
+      content: '';
+      @apply absolute top-0 -left-[100%] w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-25deg] transition-[left] duration-1000 ease-in-out;
+    }
+
+    &:hover::after {
+      @apply left-[100%];
+    }
   }
 
   .card-border {
@@ -201,11 +248,19 @@
     }
 
     .input {
-      @apply !bg-dark-200 !rounded-full !min-h-12 !px-5 placeholder:!text-light-100;
+      @apply !bg-dark-200 !rounded-full !min-h-12 !px-5;
+
+      &::placeholder {
+        @apply !text-light-100;
+      }
     }
 
     .btn {
-      @apply !w-full !bg-primary-200 !text-dark-100 hover:!bg-primary-200/80 !rounded-full !min-h-10 !font-bold !px-5 cursor-pointer;
+      @apply !w-full !bg-primary-200 !text-dark-100 !rounded-full !min-h-10 !font-bold !px-5 cursor-pointer;
+
+      &:hover {
+        @apply !bg-primary-200/80;
+      }
     }
   }
 
@@ -241,7 +296,7 @@
     @apply border-gradient p-0.5 rounded-2xl w-full;
 
     .transcript {
-      @apply dark-gradient rounded-2xl  min-h-12 px-5 py-3 flex items-center justify-center;
+      @apply dark-gradient rounded-2xl min-h-12 px-5 py-3 flex items-center justify-center;
 
       p {
         @apply text-lg text-center text-white;
@@ -282,7 +337,11 @@
   }
 
   .tech-tooltip {
-    @apply absolute bottom-full mb-1 hidden group-hover:flex px-2 py-1 text-xs text-white bg-gray-700 rounded-md shadow-md;
+    @apply absolute bottom-full mb-1 hidden px-2 py-1 text-xs text-white bg-gray-700 rounded-md shadow-md;
+
+    .group:hover & {
+      @apply flex;
+    }
   }
 
   .card-interview {
@@ -314,6 +373,10 @@
   @apply bg-gradient-to-l from-[#FFFFFF] to-[#CAC5FE];
 }
 
+@utility text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-[#CAC5FE] via-[#A78BFA] to-[#FFFFFF];
+}
+
 @utility flex-center {
   @apply flex items-center justify-center;
 }
@@ -327,8 +390,30 @@
     opacity: 0;
     transform: translateY(5px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+    border-radius: 2px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #1e1e24;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #5c5c7b;
+    border-radius: 50px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #7878a3;
   }
 }

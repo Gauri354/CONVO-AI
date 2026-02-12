@@ -9,7 +9,20 @@ import {
   getInterviewsByUserId,
 } from "@/lib/actions/general.action";
 import { interviewTemplates } from "@/constants";
-import TemplateInterviewCard from "@/components/TemplateInterviewCard";
+
+import dynamic from "next/dynamic";
+import HeroBackground from "@/components/HeroBackground";
+
+const TemplateInterviewCard = dynamic(() => import("@/components/TemplateInterviewCard"), {
+  loading: () => (
+    <div className="card-border w-[360px] max-sm:w-full min-h-96 relative flex items-center justify-center bg-dark-100">
+      <div className="flex flex-col items-center gap-2">
+        <div className="size-8 rounded-full border-2 border-primary-500 border-t-transparent animate-spin" />
+        <p className="text-light-400 text-sm">Loading template...</p>
+      </div>
+    </div>
+  ),
+});
 
 async function Home() {
   const user = await getCurrentUser();
@@ -22,14 +35,17 @@ async function Home() {
 
   return (
     <>
-      <section className="card-cta">
-        <div className="flex flex-col gap-6 max-w-lg">
+      <section className="card-cta relative overflow-hidden">
+        {/* Abstract Background */}
+        <HeroBackground />
+
+        <div className="flex flex-col gap-6 max-w-lg relative z-10 animate-in fade-in slide-in-from-bottom-10 duration-700 ease-out">
           <h2>Get Interview-Ready with AI-Powered Practice & Feedback</h2>
           <p className="text-lg">
             Practice real interview questions & get instant feedback
           </p>
 
-          <Button asChild className="btn-primary max-sm:w-full">
+          <Button asChild className="btn-primary btn-shine max-sm:w-full animate-in fade-in slide-in-from-bottom-10 duration-700 delay-200 fill-mode-forwards ease-out">
             <Link href="/interview">Start New Interview</Link>
           </Button>
         </div>
@@ -39,6 +55,7 @@ async function Home() {
           alt="robo-dude"
           width={400}
           height={400}
+          className="relative z-10 animate-in fade-in zoom-in duration-1000 delay-300 ease-out"
         />
       </section>
 
@@ -46,7 +63,7 @@ async function Home() {
       <section className="mt-16 flex flex-col gap-10">
         <div className="text-center space-y-4">
           <h2 className="text-4xl md:text-6xl font-bold text-light-900">
-            Elevate Your <span className="text-primary-500">Interview Game</span>
+            Elevate Your <span className="text-gradient">Interview Game</span>
           </h2>
           <p className="text-2xl text-light-500 font-medium">
             Your Comprehensive AI-Powered Interview Assistant
@@ -61,9 +78,9 @@ async function Home() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-500 fill-mode-forwards ease-out">
           {/* Card 1 */}
-          <div className="bg-dark-100 p-6 rounded-2xl border border-dark-300 flex flex-col gap-4 hover:border-primary-500/50 transition-colors">
+          <div className="bg-dark-100/40 backdrop-blur-sm p-6 rounded-2xl border border-light-800/10 flex flex-col gap-4 hover:border-primary-400 hover:shadow-[0_0_30px_-5px_oklch(0.6_0.118_184.704/_0.3)] transition-all duration-300 hover:scale-[1.02]">
             <div className="w-10 h-10 rounded-lg bg-primary-500/10 flex items-center justify-center text-primary-500 font-bold text-xl border border-primary-500/20">1</div>
             <h3 className="text-xl font-bold">Comprehensive Scenarios</h3>
             <p className="text-sm text-light-500">
@@ -77,7 +94,7 @@ async function Home() {
           </div>
 
           {/* Card 2 */}
-          <div className="bg-dark-100 p-6 rounded-2xl border border-dark-300 flex flex-col gap-4 hover:border-primary-500/50 transition-colors">
+          <div className="bg-dark-100/40 backdrop-blur-sm p-6 rounded-2xl border border-light-800/10 flex flex-col gap-4 hover:border-primary-400 hover:shadow-[0_0_30px_-5px_oklch(0.6_0.118_184.704/_0.3)] transition-all duration-300 hover:scale-[1.02]">
             <div className="w-10 h-10 rounded-lg bg-primary-500/10 flex items-center justify-center text-primary-500 font-bold text-xl border border-primary-500/20">2</div>
             <h3 className="text-xl font-bold">Intelligent Analysis</h3>
             <p className="text-sm text-light-500">
@@ -92,7 +109,7 @@ async function Home() {
           </div>
 
           {/* Card 3 */}
-          <div className="bg-dark-100 p-6 rounded-2xl border border-dark-300 flex flex-col gap-4 hover:border-primary-500/50 transition-colors">
+          <div className="bg-dark-100/40 backdrop-blur-sm p-6 rounded-2xl border border-light-800/10 flex flex-col gap-4 hover:border-primary-400 hover:shadow-[0_0_30px_-5px_oklch(0.6_0.118_184.704/_0.3)] transition-all duration-300 hover:scale-[1.02]">
             <div className="w-10 h-10 rounded-lg bg-primary-500/10 flex items-center justify-center text-primary-500 font-bold text-xl border border-primary-500/20">3</div>
             <h3 className="text-xl font-bold">Dynamic AI Copilot</h3>
             <p className="text-sm text-light-500">
