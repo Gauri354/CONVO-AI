@@ -4,6 +4,8 @@ import { Mona_Sans } from "next/font/google";
 
 import "./globals.css";
 
+import GuideBot from "@/components/GuideBot";
+
 const monaSans = Mona_Sans({
   variable: "--font-mona-sans",
   subsets: ["latin"],
@@ -25,6 +27,7 @@ export default function RootLayout({
         {children}
 
         <Toaster position="top-center" richColors />
+        <GuideBot />
       </body>
     </html>
   );

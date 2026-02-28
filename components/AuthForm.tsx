@@ -22,7 +22,11 @@ import FormField from "./FormField";
 
 const authFormSchema = (type: FormType) => {
   return z.object({
-    name: type === "sign-up" ? z.string().min(3, "Name must be at least 3 characters") : z.string().optional(),
+    name: type === "sign-up"
+      ? z.string()
+        .min(3, "Name must be at least 3 characters")
+        .regex(/^[a-zA-Z\s]+$/, "Name can only contain characters and spaces")
+      : z.string().optional(),
     email: z.string().email("Invalid email address"),
     password: type === "sign-up"
       ? z.string().min(6, "Password must be at least 6 characters")
