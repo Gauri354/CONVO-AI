@@ -1,10 +1,11 @@
-import { Controller, Control, FieldValues, Path } from "react-hook-form";
+import { Control, FieldValues, Path } from "react-hook-form";
 
 import {
   FormItem,
   FormLabel,
   FormControl,
   FormMessage,
+  FormField as ShadcnFormField,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
@@ -24,7 +25,7 @@ const FormField = <T extends FieldValues>({
   type = "text",
 }: FormFieldProps<T>) => {
   return (
-    <Controller
+    <ShadcnFormField
       control={control}
       name={name}
       render={({ field }) => (

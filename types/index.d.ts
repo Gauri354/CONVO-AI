@@ -48,6 +48,8 @@ interface User {
   id: string;
   gender: "male" | "female";
   careerStage: string;
+  isEmailVerified: boolean;
+  verifiedAt?: string;
 }
 
 interface InterviewCardProps {
@@ -94,6 +96,7 @@ interface GetLatestInterviewsParams {
 interface SignInParams {
   email: string;
   idToken: string;
+  password?: string;
 }
 
 interface SignUpParams {

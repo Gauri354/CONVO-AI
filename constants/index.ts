@@ -286,6 +286,9 @@ export const feedbackSchema = z.object({
   resumeAlignment: z.string().optional(),
 });
 
+// Robust email regex (HTML5 spec compliant / practical production level)
+export const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+
 export const interviewCovers = [
   "/adobe.png",
   "/amazon.png",
@@ -400,3 +403,39 @@ export const interviewTemplates = [
     type: "Behavioral",
   },
 ];
+
+export const DISPOSABLE_DOMAINS = [
+  "mailinator.com",
+  "temp-mail.org",
+  "guerrillamail.com",
+  "10minutemail.com",
+  "trashmail.com",
+  "yopmail.com",
+  "dispostable.com",
+  "getnada.com",
+  "maildrop.cc",
+  "anonaddy.com",
+  "burnermessenger.com",
+  "disposablemail.com",
+  "emailondeck.com",
+  "fakemailgenerator.com",
+  "grr.la",
+  "harakirimail.com",
+  "maildrop.cc",
+  "mailnull.com",
+  "mintemail.com",
+  "sharklasers.com",
+  "throwawaymail.com",
+];
+
+export const TYPO_DOMAIN_MAPPING: Record<string, string> = {
+  "gnail.com": "gmail.com",
+  "gamil.com": "gmail.com",
+  "gmall.com": "gmail.com",
+  "gmal.com": "gmail.com",
+  "hotmial.com": "hotmail.com",
+  "hotamail.com": "hotmail.com",
+  "yaho.com": "yahoo.com",
+  "outlok.com": "outlook.com",
+  "icloud.co": "icloud.com",
+};
