@@ -3,18 +3,18 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/actions/auth.action";
 import { Suspense } from "react";
 
-const Page = async () => {
+export const dynamic = "force-dynamic";
+
+export default async function Page() {
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
 
   return (
-    <Suspense fallback={<div className="flex items-center justify-center p-20">Loading setup...</div>}>
+    <div className="flex flex-col gap-8 w-full">
       <InterviewSetupFlow
-        userName={user?.name!}
-        userId={user?.id!}
+        userName={user.name}
+        userId={user.id}
       />
-    </Suspense>
+    </div>
   );
-};
-
-export default Page;
+}

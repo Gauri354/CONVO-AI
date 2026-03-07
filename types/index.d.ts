@@ -50,6 +50,7 @@ interface User {
   careerStage: string;
   isEmailVerified: boolean;
   verifiedAt?: string;
+  createdAt: string;
 }
 
 interface InterviewCardProps {

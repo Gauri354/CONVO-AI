@@ -182,7 +182,7 @@ export async function getCurrentUser(): Promise<User | null> {
       .get();
 
     if (!userRecord.exists) {
-      console.log("User record not found in DB for UID:", decodedClaims.uid, ". Creating basic record...");
+      console.log("getCurrentUser: User record not found in DB for UID:", decodedClaims.uid, ". Creating basic record...");
 
       const basicUser = {
         name: decodedClaims.name || decodedClaims.email?.split('@')[0] || "New User",
@@ -195,20 +195,53 @@ export async function getCurrentUser(): Promise<User | null> {
 
       await db.collection("users").doc(decodedClaims.uid).set(basicUser);
 
-      return {
-        ...basicUser,
+      const rawNewUser = {
         id: decodedClaims.uid,
-      } as User;
+        name: basicUser.name,
+        email: basicUser.email,
+        gender: basicUser.gender,
+        careerStage: basicUser.careerStage,
+        isEmailVerified: basicUser.isEmailVerified,
+        createdAt: basicUser.createdAt,
+      };
+
+      const plainNewUser = JSON.parse(JSON.stringify(rawNewUser));
+
+      console.log("getCurrentUser: Returning new user:", plainNewUser.email);
+      return plainNewUser as User;
     }
 
-    return {
-      ...userRecord.data(),
-      id: userRecord.id,
-    } as User;
-  } catch (error) {
-    console.error("Session verification failed:", error);
+    const userData = userRecord.data();
+    console.log("getCurrentUser: User record found in DB for UID:", userRecord.id);
 
-    // Invalid or expired session
+    if (!userData) {
+      console.error("getCurrentUser: userRecord exists but data() is undefined for UID:", userRecord.id);
+      return null;
+    }
+
+    const rawUser = {
+      id: userRecord.id,
+      name: userData.name || "",
+      email: userData.email || "",
+      gender: userData.gender || "male",
+      careerStage: userData.careerStage || "other",
+      isEmailVerified: userData.isEmailVerified || false,
+      createdAt: userData.createdAt || "",
+      verifiedAt: userData.verifiedAt || undefined,
+    };
+
+    // Use JSON stringify and parse to guarantee a plain, serializable object
+    // This fixes the 'Object.defineProperty called on non-object' error in Next.js 15
+    const plainUser = JSON.parse(JSON.stringify(rawUser));
+
+    console.log("getCurrentUser: Returning existing user:", plainUser.email);
+    return plainUser as User;
+  } catch (error: any) {
+    if (error.code === 'auth/session-cookie-expired' || error.code === 'auth/argument-error') {
+      console.log("getCurrentUser: Session expired or invalid.");
+    } else {
+      console.error("getCurrentUser: Session verification failed:", error);
+    }
     return null;
   }
 }

@@ -10,10 +10,12 @@ import {
 } from "@/lib/actions/general.action";
 import { interviewTemplates } from "@/constants";
 
-import dynamic from "next/dynamic";
+import nextDynamic from "next/dynamic";
 import HeroBackground from "@/components/HeroBackground";
 
-const TemplateInterviewCard = dynamic(() => import("@/components/TemplateInterviewCard"), {
+export const dynamic = "force-dynamic";
+
+const TemplateInterviewCard = nextDynamic(() => import("@/components/TemplateInterviewCard"), {
   loading: () => (
     <div className="card-border w-[360px] max-sm:w-full min-h-96 relative flex items-center justify-center bg-dark-100">
       <div className="flex flex-col items-center gap-2">
