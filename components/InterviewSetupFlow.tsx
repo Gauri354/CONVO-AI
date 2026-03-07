@@ -26,24 +26,28 @@ const InterviewSetupFlow = ({ userId, userName }: { userId: string; userName: st
     techStack: "",
   });
 
+  const [hasStarted, setHasStarted] = useState(false);
+
   useEffect(() => {
     const role = searchParams.get("role");
     const level = searchParams.get("level");
     const techstack = searchParams.get("techstack");
-    const type = searchParams.get("type");
     const shortcut = searchParams.get("shortcut");
 
-    if (shortcut === "true" && role) {
-      setDetails({
+    if (shortcut === "true" && role && !hasStarted) {
+      setHasStarted(true);
+      const directDetails = {
         role,
         company: "",
         level: level || "Junior",
         techStack: techstack || "",
-      });
+      };
+      setDetails(directDetails);
       setInterviewType("AI");
-      setStep("SCHEDULE");
+
+      handleFinish("NOW", directDetails, "AI");
     }
-  }, [searchParams]);
+  }, [searchParams, hasStarted]);
 
   const handleNext = async () => {
     try {
@@ -91,16 +95,23 @@ const InterviewSetupFlow = ({ userId, userName }: { userId: string; userName: st
     }
   };
 
-  const handleFinish = async (scheduleType: "NOW" | "LATER") => {
+  const handleFinish = async (
+    scheduleType: "NOW" | "LATER",
+    overrideDetails?: typeof details,
+    overrideType?: typeof interviewType
+  ) => {
+    const currentDetails = overrideDetails || details;
+    const currentType = overrideType || interviewType;
+
     const loadingToast = toast.loading(scheduleType === "NOW" ? "Preparing interview..." : "Scheduling interview...");
 
     try {
-      console.log("[SetupFlow] Creating interview...", { interviewType, scheduleType });
+      console.log("[SetupFlow] Creating interview...", { currentType, scheduleType });
       const result = await createInterview({
-        role: details.role || (interviewType === "RESUME" ? "Resume-Based Interview" : ""),
-        level: details.level,
-        techstack: details.techStack || (interviewType === "RESUME" ? "General" : ""),
-        type: interviewType === "AI" ? "Technical" : "Mixed",
+        role: currentDetails.role || (currentType === "RESUME" ? "Resume-Based Interview" : ""),
+        level: currentDetails.level,
+        techstack: currentDetails.techStack || (currentType === "RESUME" ? "General" : ""),
+        type: currentType === "AI" ? "Technical" : "Mixed",
         userId,
         status: scheduleType === "NOW" ? "in-progress" : "scheduled",
         questions: [],

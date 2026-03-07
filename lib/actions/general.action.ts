@@ -31,6 +31,13 @@ export async function createFeedback(params: CreateFeedbackParams) {
       - Cultural & Role Fit
       - Confidence & Clarity
 
+      **Coding Round Analysis**: 
+      - Specifically check if the AI asked "Are you comfortable for a coding round?" (or similar).
+      - If the candidate said "No" or declined, you MUST:
+        1. Mention "Coding round not attempted" in the **finalAssessment**.
+        2. Significantly reduce the **Problem-Solving** and **Technical Knowledge** scores.
+        3. Ensure the **totalScore** reflects this incomplete attempt.
+
       IMPORTANT: You must return ONLY a raw JSON object (no markdown blocks, no other text) matching this schema structure:
       {
         "totalScore": number,
@@ -105,17 +112,17 @@ export async function createInterview(params: any) {
     };
 
     const docRef = await db.collection("interviews").add(interview);
-    return { success: true, id: docRef.id };
+    return JSON.parse(JSON.stringify({ success: true, id: docRef.id }));
   } catch (error: any) {
     console.error("Error creating interview:", error);
-    return { success: false, message: error.message };
+    return JSON.parse(JSON.stringify({ success: false, message: error.message }));
   }
 }
 
 export async function getInterviewById(id: string): Promise<Interview | null> {
   const interview = await db.collection("interviews").doc(id).get();
   if (!interview.exists) return null;
-  return { id: interview.id, ...interview.data() } as Interview;
+  return JSON.parse(JSON.stringify({ id: interview.id, ...interview.data() })) as Interview;
 }
 
 export async function cancelInterview(id: string) {
@@ -163,7 +170,7 @@ export async function getFeedbackByInterviewId(
   if (querySnapshot.empty) return null;
 
   const feedbackDoc = querySnapshot.docs[0];
-  return { id: feedbackDoc.id, ...feedbackDoc.data() } as Feedback;
+  return JSON.parse(JSON.stringify({ id: feedbackDoc.id, ...feedbackDoc.data() })) as Feedback;
 }
 
 export async function getAllFeedbacksByUserId(userId: string): Promise<Feedback[]> {
@@ -185,10 +192,10 @@ export async function getLatestInterviews(
     .limit(limit)
     .get();
 
-  return interviews.docs.map((doc) => ({
+  return interviews.docs.map((doc) => JSON.parse(JSON.stringify({
     id: doc.id,
     ...doc.data(),
-  })) as Interview[];
+  }))) as Interview[];
 }
 
 export async function getInterviewsByUserId(

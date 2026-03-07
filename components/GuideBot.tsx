@@ -9,16 +9,23 @@ import { cn } from "@/lib/utils";
 
 const GuideBot = () => {
     const [isOpen, setIsOpen] = useState(false);
+    const [mounted, setMounted] = useState(false);
     const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
         api: "/api/chat",
     });
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
     }, [messages]);
+
+    if (!mounted) return null;
 
     return (
         <>

@@ -24,11 +24,20 @@ export const mappings = {
   postgresql: "postgresql",
   sqlite: "sqlite",
   firebase: "firebase",
+  springboot: "spring",
+  sql: "mysql",
+  "spring boot": "spring",
+  "amazon web services": "amazonwebservices",
+  "google cloud platform": "googlecloud",
+  "microsoft azure": "azure",
+  spring: "spring",
   docker: "docker",
   kubernetes: "kubernetes",
-  aws: "aws",
+  aws: "amazonwebservices",
+  amazonwebservices: "amazonwebservices",
   azure: "azure",
-  gcp: "gcp",
+  gcp: "googlecloud",
+  googlecloud: "googlecloud",
   digitalocean: "digitalocean",
   heroku: "heroku",
   photoshop: "photoshop",
@@ -95,6 +104,18 @@ export const mappings = {
   netlify: "netlify",
   vercel: "vercel",
   "aws amplify": "amplify",
+  // Non-tech / Behavioral skips
+  starmethod: "__skip__",
+  leadership: "__skip__",
+  communication: "__skip__",
+  softskills: "__skip__",
+  architecture: "__skip__",
+  distributedsystems: "__skip__",
+  algorithms: "__skip__",
+  datastructures: "__skip__",
+  dsa: "__skip__",
+  "problem solving": "__skip__",
+  efficiency: "__skip__",
 };
 
 export const START_QUESTION_PROMPT = `Ask the candidate to introduce themselves and their background related to the role.`;
@@ -159,26 +180,19 @@ Tech Stack: {{techstack}}
 [Assessment Structure]
 Strictly follow this 5-stage flow.
 
-1.  **General & Career Motivation** (Start here)
-    *   "Tell me about yourself."
-    *   "Why are you interested in this {{role}} position?"
-    *   "What do you know about our company/industry?"
+1.  **Role-Specific Technical Assessment** (Start here)
+    *   Ask questions exclusively about {{techstack}} and its application in {{role}}.
+    *   Focus on deep concepts, architecture, best practices, and real-world problem-solving.
+    *   Example: "Can you walk me through the component lifecycle in {{techstack}}?" or "How would you handle state management for a large-scale {{role}} application?"
 
-2.  **Behavioral & Situational (STAR Method)**
-    *   Ask questions requiring the STAR method.
-    *   Examples: "Describe a time you had to adapt quickly...", "Tell me about a time you handled a difficult stakeholder...".
+2.  **Coding Round Comfort Check** (Mandatory mid-interview)
+    *   After a few technical questions, explicitly ask: "Are you comfortable for a coding round?"
+    *   If the user says YES: Proceed to ask coding-related logic or algorithm questions.
+    *   If the user says NO: Inform them that the interview can proceed to wrap up or continue with theoretical questions, but note that it may affect the final scoring.
 
-3.  **Role-Specific Technical Questions**
-    *   Ask questions specific to {{techstack}} and {{role}}.
-    *   Focus on concepts, architecture, and problem-solving.
-    *   Example: "Can you walk me through a recent project using {{techstack}}?"
-
-4.  **Communication & Soft Skill Assessment** (Ongoing)
+3.  **Communication & Soft Skill Assessment** (Ongoing)
     *   *Do not ask specific questions for this, but analyze their responses.*
     *   Assess Clarity, Confidence, and Structure.
-
-5.  **Gamified / Cognitive Assessment** (End with this)
-    *   Ask 1-2 situational judgment questions regarding risk-taking or decision making under pressure.
 
 [Guiding Principles]
 *   **Adaptive**: Adjust difficulty based on responses.
@@ -221,9 +235,10 @@ You are an AI interview assistant helping candidates prepare for job interviews 
 - Speak clearly and adapt language to match the role's industry.
 
 [Response Guidelines]
-- Tailor questions based on the specific company and role details provided.
-- Alternate between technical and behavioral questions relevant to the role.
-- Keep feedback concise but informative, addressing the candidate's strengths and areas for improvement.
+- Tailor questions strictly based on the technical role and tech stack provided.
+- For technical interviews, AVOID behavioral or motivational questions. Focus 100% on technology.
+- YOU MUST ask the candidate if they are "comfortable for a coding round" during the session.
+- Keep feedback concise but informative, addressing the candidate's technical accuracy.
 
 [Task & Goals]
 1. Begin the session by asking for the candidate's name and the role they're applying for.
