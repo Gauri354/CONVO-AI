@@ -2,362 +2,196 @@
 
 import { auth, db } from "@/firebase/admin";
 import { cookies } from "next/headers";
-import { resolveMx } from "dns/promises";
-import { DISPOSABLE_DOMAINS, EMAIL_REGEX } from "@/constants";
-import { Resend } from "resend";
-import { v4 as uuidv4 } from "uuid";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+import { EMAIL_REGEX } from "@/constants";
+import { sendEmail } from "@/lib/nodemailer";
 
 // Session duration (1 week)
 const SESSION_DURATION = 60 * 60 * 24 * 7;
 
-// Set session cookie
 export async function setSessionCookie(idToken: string) {
   const cookieStore = await cookies();
 
-  // Create session cookie
   const sessionCookie = await auth.createSessionCookie(idToken, {
-    expiresIn: SESSION_DURATION * 1000, // milliseconds
+    expiresIn: SESSION_DURATION * 1000,
   });
 
-  // Set cookie in the browser
   cookieStore.set("session", sessionCookie, {
     maxAge: SESSION_DURATION,
     httpOnly: true,
-    secure: false, // Force false for local testing
+    secure: process.env.NODE_ENV === "production",
     path: "/",
     sameSite: "lax",
   });
 }
 
-async function checkMXRecords(domain: string): Promise<boolean> {
-  // skip for localhost/internal domains during testing
-  if (domain === "localhost" || domain.endsWith(".test")) return true;
-
-  try {
-    const records = await resolveMx(domain);
-    return records && records.length > 0;
-  } catch (error) {
-    console.warn(`MX record lookup failed for ${domain}:`, error);
-    return false;
-  }
-}
-
-export async function signUp(params: SignUpParams) {
-  const { uid, name, email, password, gender, careerStage } = params;
-
-  try {
-    // Robust email validation (redundant but safe server-side check)
-    const normalizedEmail = email.trim().toLowerCase();
-    if (!EMAIL_REGEX.test(normalizedEmail)) {
-      return {
-        success: false,
-        message: "Invalid email address format.",
-      };
-    }
-
-    const domain = normalizedEmail.split("@")[1];
-    if (!domain || DISPOSABLE_DOMAINS.includes(domain)) {
-      return {
-        success: false,
-        message: "This email domain is not allowed.",
-      };
-    }
-
-    // Check MX records
-    const hasMX = await checkMXRecords(domain);
-    if (!hasMX) {
-      return {
-        success: false,
-        message: "This email domain does not appear to be valid or cannot receive mail.",
-      };
-    }
-
-    // check if user exists in db
-    const userRecord = await db.collection("users").doc(uid).get();
-    if (userRecord.exists)
-      return {
-        success: false,
-        message: "User already exists. Please sign in.",
-      };
-
-    // save user to db with isEmailVerified: false
-    await db.collection("users").doc(uid).set({
-      name,
-      email: normalizedEmail,
-      password, // Added as requested
-      gender,
-      careerStage,
-      isEmailVerified: false,
-      createdAt: new Date().toISOString(),
-    });
-
-    // Send verification email
-    await sendVerificationEmailInternal(uid, normalizedEmail, name);
-
-    return {
-      success: true,
-      message: "Account created successfully. Please verify your email.",
-    };
-  } catch (error: any) {
-    console.error("Error creating user:", error);
-
-    // Handle Firebase specific errors
-    if (error.code === "auth/email-already-exists") {
-      return {
-        success: false,
-        message: "This email is already in use",
-      };
-    }
-
-    return {
-      success: false,
-      message: "Failed to create account. Please try again.",
-    };
-  }
-}
-
-export async function signIn(params: SignInParams) {
-  const { email, idToken, password } = params;
-  console.log("signIn action called");
-
-  try {
-    // Verify the user is verified in our database
-    const decodedToken = await auth.verifyIdToken(idToken);
-    const userDoc = await db.collection("users").doc(decodedToken.uid).get();
-
-    /* 
-    if (userDoc.exists) {
-      const userData = userDoc.data();
-
-      // Additional check for email verification status
-      if (userData && userData.isEmailVerified === false) {
-        return {
-          success: false,
-          message: "Please verify your email address before signing in.",
-        };
-      }
-    }
-    */
-
-    await setSessionCookie(idToken);
-    console.log("Session cookie set successfully");
-    return { success: true };
-  } catch (error: any) {
-    console.error("Sign in error:", error);
-    return {
-      success: false,
-      message: "Failed to log into account. Please try again.",
-    };
-  }
-}
-
-// Sign out user by clearing the session cookie
 export async function signOut() {
   const cookieStore = await cookies();
-
   cookieStore.delete("session");
 }
 
-// Get current user from session cookie
-export async function getCurrentUser(): Promise<User | null> {
-  const cookieStore = await cookies();
+const Templates = {
+  otp: (otp: string) => `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+      <h2 style="color: #4f46e5;">SmartInterview - Your OTP Code</h2>
+      <p>Please use the following 4-digit code to complete your authentication:</p>
+      <div style="margin: 30px 0; text-align: center;">
+        <span style="background-color: #f3f4f6; color: #111; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 24px; letter-spacing: 4px; display: inline-block;">
+          ${otp}
+        </span>
+      </div>
+      <p>This code will expire in 10 minutes.</p>
+      <p style="color: #666; font-size: 14px;">If you did not request this, you can safely ignore this email.</p>
+    </div>
+  `
+};
 
-  const sessionCookie = cookieStore.get("session")?.value;
-  if (!sessionCookie) {
-    console.log("No session cookie found");
-    return null;
+export async function sendOtp(params: { email: string; name?: string; type: "sign-in" | "sign-up" }) {
+  try {
+    const { email, type } = params;
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!EMAIL_REGEX.test(normalizedEmail)) {
+      return { success: false, message: "Invalid email address format." };
+    }
+
+    const userSnapshot = await db.collection("users").where("email", "==", normalizedEmail).get();
+    const userExists = !userSnapshot.empty;
+
+    if (type === "sign-up" && userExists) {
+      return { success: false, message: "User already exists. Please sign in." };
+    }
+    if (type === "sign-in" && !userExists) {
+      return { success: false, message: "Account not found. Please sign up." };
+    }
+
+    // Generate 4 digit OTP
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    await db.collection("otps").doc(normalizedEmail).set({
+      otp,
+      expiresAt: expiresAt.toISOString(),
+    });
+
+    // Send the email using the generic sendEmail utility
+    // We update .env.local to set SMTP_FROM_EMAIL to mbeproject04@gmail.com
+    await sendEmail({
+      to: normalizedEmail,
+      subject: "Your SmartInterview Login Code",
+      html: Templates.otp(otp)
+    });
+
+    return { success: true, message: "OTP sent to your email!" };
+  } catch (error) {
+    console.error("Error sending OTP:", error);
+    return { success: false, message: "Failed to send OTP. Please try again." };
   }
+}
+
+export async function verifyOtpAndLogin(params: { email: string; otp: string; name?: string; type: "sign-in" | "sign-up" }) {
+  try {
+    const { email, otp, name, type } = params;
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const otpDoc = await db.collection("otps").doc(normalizedEmail).get();
+    
+    if (!otpDoc.exists) {
+      return { success: false, message: "No OTP request found for this email." };
+    }
+
+    const otpData = otpDoc.data()!;
+    if (otpData.otp !== otp) {
+      return { success: false, message: "Invalid OTP code." };
+    }
+
+    if (new Date() > new Date(otpData.expiresAt)) {
+      await db.collection("otps").doc(normalizedEmail).delete();
+      return { success: false, message: "OTP has expired. Please request a new one." };
+    }
+
+    // OTP is valid. Delete it.
+    await db.collection("otps").doc(normalizedEmail).delete();
+
+    let uid: string;
+
+    if (type === "sign-up") {
+      // Create user in Firebase Auth
+      const userRecord = await auth.createUser({
+        email: normalizedEmail,
+        displayName: name,
+        emailVerified: true
+      });
+      uid = userRecord.uid;
+
+      // Save user to Firestore Custom DB
+      await db.collection("users").doc(uid).set({
+        name: name || "New User",
+        email: normalizedEmail,
+        isEmailVerified: true,
+        createdAt: new Date().toISOString(),
+      });
+    } else {
+      // Sign in check
+      const userSnapshot = await db.collection("users").where("email", "==", normalizedEmail).get();
+      if (userSnapshot.empty) {
+        return { success: false, message: "User document missing in DB." };
+      }
+      uid = userSnapshot.docs[0].id;
+    }
+
+    // Mint a custom token so the client can signInWithCustomToken and obtain a standard Firebase Session
+    const customToken = await auth.createCustomToken(uid);
+
+    return { success: true, customToken };
+  } catch (error) {
+    console.error("Error verifying OTP:", error);
+    return { success: false, message: "An error occurred during verification. Please try again." };
+  }
+}
+
+export async function getCurrentUser() {
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("session")?.value;
+  
+  if (!sessionCookie) return null;
 
   try {
-    // Disable revocation check (true -> false) to avoid potential sync/latency issues
     const decodedClaims = await auth.verifySessionCookie(sessionCookie, false);
-
-    // get user info from db
-    const userRecord = await db
-      .collection("users")
-      .doc(decodedClaims.uid)
-      .get();
+    
+    // Fetch from db
+    const userRecord = await db.collection("users").doc(decodedClaims.uid).get();
 
     if (!userRecord.exists) {
-      console.log("getCurrentUser: User record not found in DB for UID:", decodedClaims.uid, ". Creating basic record...");
-
       const basicUser = {
         name: decodedClaims.name || decodedClaims.email?.split('@')[0] || "New User",
         email: decodedClaims.email || "",
-        gender: "male" as const,
-        careerStage: "other",
-        isEmailVerified: decodedClaims.email_verified || false,
+        isEmailVerified: true,
         createdAt: new Date().toISOString(),
       };
-
       await db.collection("users").doc(decodedClaims.uid).set(basicUser);
-
-      const rawNewUser = {
-        id: decodedClaims.uid,
-        name: basicUser.name,
-        email: basicUser.email,
-        gender: basicUser.gender,
-        careerStage: basicUser.careerStage,
-        isEmailVerified: basicUser.isEmailVerified,
-        createdAt: basicUser.createdAt,
-      };
-
-      const plainNewUser = JSON.parse(JSON.stringify(rawNewUser));
-
-      console.log("getCurrentUser: Returning new user:", plainNewUser.email);
-      return plainNewUser as User;
+      return JSON.parse(JSON.stringify({ id: decodedClaims.uid, ...basicUser }));
     }
 
-    const userData = userRecord.data();
-    console.log("getCurrentUser: User record found in DB for UID:", userRecord.id);
-
-    if (!userData) {
-      console.error("getCurrentUser: userRecord exists but data() is undefined for UID:", userRecord.id);
-      return null;
-    }
-
-    const rawUser = {
-      id: userRecord.id,
-      name: userData.name || "",
-      email: userData.email || "",
-      gender: userData.gender || "male",
-      careerStage: userData.careerStage || "other",
-      isEmailVerified: userData.isEmailVerified || false,
-      createdAt: userData.createdAt || "",
-      verifiedAt: userData.verifiedAt || undefined,
-    };
-
-    // Use JSON stringify and parse to guarantee a plain, serializable object
-    // This fixes the 'Object.defineProperty called on non-object' error in Next.js 15
-    const plainUser = JSON.parse(JSON.stringify(rawUser));
-
-    console.log("getCurrentUser: Returning existing user:", plainUser.email);
-    return plainUser as User;
-  } catch (error: any) {
-    if (error.code === 'auth/session-cookie-expired' || error.code === 'auth/argument-error') {
-      console.log("getCurrentUser: Session expired or invalid.");
-    } else {
-      console.error("getCurrentUser: Session verification failed:", error);
-    }
+    const userData = userRecord.data()!;
+    return JSON.parse(JSON.stringify({ id: userRecord.id, ...userData }));
+  } catch (error) {
+    console.error("Session verification failed:", error);
     return null;
   }
 }
 
-// Check if user is authenticated
 export async function isAuthenticated() {
   const user = await getCurrentUser();
   return !!user;
 }
-export async function updateUser(userId: string, data: Partial<User>) {
+
+export async function updateUser(userId: string, data: any) {
   try {
-    const { id, email, ...updateData } = data as any; // Ensure we don't update ID or Email
-
+    const { id, email, ...updateData } = data; // Prevent updating IDs or emails directly
     await db.collection("users").doc(userId).update(updateData);
-
     return { success: true, message: "Profile updated successfully" };
   } catch (error) {
     console.error("Error updating user:", error);
     return { success: false, message: "Failed to update profile" };
-  }
-}
-
-// Verification Logic
-async function sendVerificationEmailInternal(userId: string, email: string, name: string) {
-  const token = uuidv4();
-  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
-  // Store token in Firestore
-  await db.collection("email_verifications").doc(token).set({
-    userId,
-    email,
-    expiresAt: expiresAt.toISOString(),
-  });
-
-  const verificationUrl = `${APP_URL}/verify-email?token=${token}`;
-
-  // Send email via Resend
-  await resend.emails.send({
-    from: "SmartInterview <onboarding@resend.dev>", // Replace with your verified domain in production
-    to: email,
-    subject: "Verify your email - SmartInterview",
-    html: `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2>Welcome to SmartInterview, ${name}!</h2>
-        <p>Please click the link below to verify your email address and activate your account:</p>
-        <div style="margin: 30px 0;">
-          <a href="${verificationUrl}" style="background-color: #7c3aed; color: white; padding: 12px 24px; text-decoration: none; rounded: 8px; font-weight: bold;">
-            Verify Email Address
-          </a>
-        </div>
-        <p>This link will expire in 24 hours.</p>
-        <p>If you did not create an account, you can safely ignore this email.</p>
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;" />
-        <p style="color: #666; font-size: 12px;">SmartInterview Team</p>
-      </div>
-    `,
-  });
-}
-
-export async function resendVerificationEmail(email: string) {
-  try {
-    const normalizedEmail = email.trim().toLowerCase();
-
-    // Find user by email
-    const userSnapshot = await db.collection("users").where("email", "==", normalizedEmail).limit(1).get();
-
-    if (userSnapshot.empty) {
-      // Don't reveal if user exists for security
-      return { success: true, message: "Verification email sent if account exists." };
-    }
-
-    const userDoc = userSnapshot.docs[0];
-    const userData = userDoc.data();
-
-    if (userData.isEmailVerified) {
-      return { success: false, message: "This email is already verified." };
-    }
-
-    // Send the email
-    await sendVerificationEmailInternal(userDoc.id, normalizedEmail, userData.name);
-
-    return { success: true, message: "Verification email sent." };
-  } catch (error) {
-    console.error("Error resending verification email:", error);
-    return { success: false, message: "Failed to resend email. Please try again later." };
-  }
-}
-
-export async function verifyEmailToken(token: string) {
-  try {
-    const tokenDoc = await db.collection("email_verifications").doc(token).get();
-
-    if (!tokenDoc.exists) {
-      return { success: false, message: "Invalid or expired verification link." };
-    }
-
-    const { userId, expiresAt } = tokenDoc.data()!;
-
-    if (new Date() > new Date(expiresAt)) {
-      // Token expired, delete it
-      await db.collection("email_verifications").doc(token).delete();
-      return { success: false, message: "Verification link has expired. Please request a new one." };
-    }
-
-    // Mark user as verified
-    await db.collection("users").doc(userId).update({
-      isEmailVerified: true,
-      verifiedAt: new Date().toISOString(),
-    });
-
-    // Delete the token
-    await db.collection("email_verifications").doc(token).delete();
-
-    return { success: true, message: "Email verified successfully! You can now sign in." };
-  } catch (error) {
-    console.error("Error verifying email token:", error);
-    return { success: false, message: "An error occurred during verification. Please try again." };
   }
 }

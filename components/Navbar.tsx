@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import UserDropdown from "@/components/UserDropdown";
+import BackButton from "@/components/BackButton";
 import { Button } from "@/components/ui/button";
 
 interface NavbarProps {
@@ -26,23 +27,34 @@ const Navbar = ({ user }: NavbarProps) => {
         },
         {
             label: "Reports",
-            route: "/reports", // Assuming this route exists or will exist based on file structure
+            route: "/reports",
+        },
+        {
+            label: "About Us",
+            route: "/about-us",
+        },
+        {
+            label: "Help",
+            route: "/help",
         }
     ];
 
     return (
         <nav className="flex justify-between items-center w-full py-4 px-6 md:px-10 sticky top-0 z-50 bg-dark-100/70 backdrop-blur-md border-b border-light-800/10 transition-all duration-300">
-            <div className="flex items-center gap-10">
-                <Link href="/" className="flex items-center gap-2">
-                    <Image
-                        src="/logo.png"
-                        alt="SmartInterview Logo"
-                        width={48} // Adjusted size for better fit
-                        height={48}
-                        className="object-contain"
-                    />
-                    <h2 className="text-2xl font-bold text-primary-100 hidden sm:block">SmartInterview</h2>
-                </Link>
+            <div className="flex items-center gap-4 md:gap-10">
+                <div className="flex items-center gap-2">
+                    {pathname !== "/" && <BackButton />}
+                    <Link href="/" className="flex items-center gap-2">
+                        <Image
+                            src="/logo.png"
+                            alt="SmartInterview Logo"
+                            width={48} 
+                            height={48}
+                            className="object-contain"
+                        />
+                        <h2 className="text-2xl font-bold text-primary-100 hidden sm:block">SmartInterview</h2>
+                    </Link>
+                </div>
 
                 {/* Desktop Navigation */}
                 <div className="hidden md:flex items-center gap-6">
