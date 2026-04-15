@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Editor from "@monaco-editor/react";
 import { toast } from "sonner";
+import { Button } from "./ui/button";
 
 import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
@@ -22,6 +23,8 @@ interface SavedMessage {
   role: "user" | "system" | "assistant";
   content: string;
 }
+
+import CodingRound from "./CodingRound";
 
 const Agent = ({
   userName,
@@ -46,6 +49,20 @@ const Agent = ({
   const [code, setCode] = useState("// Write your code here...");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(currentQuestionIndexProp || 0);
 
+  const [phase, setPhase] = useState<"verbal" | "prompt" | "coding" | "submitting" | "finished">("verbal");
+  
+  useEffect(() => {
+    if (messages.length > 0) {
+      setLastMessage(messages[messages.length - 1].content);
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    if (callStatus === CallStatus.FINISHED && type === "generate") {
+      router.push("/");
+    }
+  }, [callStatus, type, router]);
+
   useEffect(() => {
     const onCallStart = () => {
       setCallStatus(CallStatus.ACTIVE);
@@ -53,28 +70,20 @@ const Agent = ({
 
     const onCallEnd = () => {
       setCallStatus(CallStatus.FINISHED);
+      // When call ends, show the coding prompt
+      setPhase("prompt");
     };
 
-    const onMessage = (message: Message) => {
+    const onMessage = (message: any) => {
       if (message.type === "transcript" && message.transcriptType === "final") {
-        const newMessage = { role: message.role, content: message.transcript };
+        const newMessage = { role: message.role, content: message.transcript } as SavedMessage;
         setMessages((prev) => [...prev, newMessage]);
       }
     };
 
-    const onSpeechStart = () => {
-      console.log("speech start");
-      setIsSpeaking(true);
-    };
-
-    const onSpeechEnd = () => {
-      console.log("speech end");
-      setIsSpeaking(false);
-    };
-
-    const onError = (error: Error) => {
-      console.log("Error:", error);
-    };
+    const onSpeechStart = () => setIsSpeaking(true);
+    const onSpeechEnd = () => setIsSpeaking(false);
+    const onError = (error: Error) => console.log("Error:", error);
 
     vapi.on("call-start", onCallStart);
     vapi.on("call-end", onCallEnd);
@@ -93,38 +102,30 @@ const Agent = ({
     };
   }, []);
 
-  useEffect(() => {
-    if (messages.length > 0) {
-      setLastMessage(messages[messages.length - 1].content);
+  const handleFinishVerbalOnly = async () => {
+    setPhase("submitting");
+    const loadingToast = toast.loading("Generating your verbal report...");
+
+    const { success, feedbackId: id } = await createFeedback({
+      interviewId: interviewId!,
+      userId: userId!,
+      transcript: messages,
+      feedbackId,
+    });
+
+    toast.dismiss(loadingToast);
+
+    if (success && id) {
+      router.push(`/interview/${interviewId}/feedback`);
+    } else {
+      toast.error("Error saving feedback");
+      router.push("/");
     }
+  };
 
-    const handleGenerateFeedback = async (messages: SavedMessage[]) => {
-      console.log("handleGenerateFeedback");
-
-      const { success, feedbackId: id } = await createFeedback({
-        interviewId: interviewId!,
-        userId: userId!,
-        transcript: messages,
-        feedbackId,
-        code: isCodingMode ? code : undefined,
-      });
-
-      if (success && id) {
-        router.push(`/interview/${interviewId}/feedback`);
-      } else {
-        console.log("Error saving feedback");
-        router.push("/");
-      }
-    };
-
-    if (callStatus === CallStatus.FINISHED) {
-      if (type === "generate") {
-        router.push("/");
-      } else {
-        handleGenerateFeedback(messages);
-      }
-    }
-  }, [messages, callStatus, feedbackId, interviewId, router, type, userId]);
+  const handleStartCoding = () => {
+    setPhase("coding");
+  };
 
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
@@ -203,6 +204,46 @@ const Agent = ({
     setCallStatus(CallStatus.FINISHED);
     vapi.stop();
   };
+
+  if (phase === "prompt") {
+    return (
+      <div className="flex flex-col items-center justify-center gap-8 py-20 animate-in fade-in zoom-in duration-500">
+        <div className="text-center space-y-4">
+          <h2 className="text-3xl font-bold">Verbal Round Completed!</h2>
+          <p className="text-light-400 max-w-md mx-auto">
+            You've successfully finished the voice interview. Would you like to continue with a 10-question coding round to boost your score?
+          </p>
+        </div>
+
+        <div className="flex gap-4 w-full max-w-sm">
+          <Button onClick={handleFinishVerbalOnly} variant="ghost" className="flex-1 text-light-400 border border-dark-200">
+            No, finish now
+          </Button>
+          <Button onClick={handleStartCoding} className="btn-primary flex-1">
+            Yes, start coding
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === "coding") {
+    return (
+      <CodingRound 
+        interviewId={interviewId!} 
+        userId={userId!} 
+      />
+    );
+  }
+
+  if (phase === "submitting") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <div className="size-12 rounded-full border-4 border-primary-500 border-t-transparent animate-spin" />
+        <p className="text-light-400 font-medium">AI is analyzing your session and generating your report...</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -340,5 +381,6 @@ const Agent = ({
     </>
   );
 };
+
 
 export default Agent;

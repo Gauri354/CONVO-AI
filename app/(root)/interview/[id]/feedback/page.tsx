@@ -140,35 +140,68 @@ const Feedback = async ({ params }: RouteParams) => {
         </div>
       )}
 
-      {/* Coding Analysis */}
-      {feedback?.codingAnalysis && (
-        <div className="mt-12 p-8 bg-dark-200 rounded-2xl border border-primary-200/20">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">Coding Analysis</h2>
-            <span className={cn(
-              "px-4 py-1 rounded-full text-xs font-bold uppercase",
-              feedback.codingAnalysis.isOptimal ? "bg-success-100/20 text-success-100" : "bg-destructive-100/20 text-destructive-100"
-            )}>
-              {feedback.codingAnalysis.isOptimal ? "Optimal Solution" : "Sub-Optimal Solution"}
-            </span>
+      {/* Coding Detailed analysis */}
+      {feedback?.codingDetailedAnalysis && feedback.codingDetailedAnalysis.length > 0 && (
+        <div className="mt-12 flex flex-col gap-8 print:break-before-page">
+          <div className="flex items-center justify-between">
+            <h2 className="text-3xl font-bold text-primary-100 print:text-black">Coding Round Detailed Analysis</h2>
+            <div className="flex flex-col items-end">
+              <span className="text-sm text-light-400 font-medium print:text-gray-600">Coding Proficiency</span>
+              <span className="text-2xl font-bold text-primary-200 print:text-black">{feedback.codingOverallScore || 0}%</span>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-6">
-            <div>
-              <h3 className="text-lg font-semibold text-primary-100 mb-2">Explanation</h3>
-              <p className="text-light-100 text-sm leading-relaxed">{feedback.codingAnalysis.explanation}</p>
-            </div>
+          <div className="flex flex-col gap-10">
+            {feedback.codingDetailedAnalysis.map((item, index) => (
+              <div key={index} className="flex flex-col gap-6 p-8 bg-dark-200 rounded-3xl border border-light-800/20 relative overflow-hidden group hover:border-primary-500/30 transition-all duration-300 print:bg-white print:border-black print:shadow-none">
+                {/* Question Status Badge */}
+                <div className={cn(
+                  "absolute top-0 right-0 px-6 py-2 rounded-bl-2xl text-xs font-bold uppercase tracking-widest",
+                  item.isCorrect ? "bg-success-100 text-dark-400" : "bg-destructive-100 text-white"
+                )}>
+                  {item.isCorrect ? "Correct" : "Incorrect"} • {item.score}/10
+                </div>
 
-            {!feedback.codingAnalysis.isOptimal && (
-              <div>
-                <h3 className="text-lg font-semibold text-success-100 mb-2">Optimal Approach</h3>
-                <div className="bg-dark-300 p-4 rounded-xl border border-light-800 overflow-x-auto">
-                  <pre className="text-xs text-light-100 font-mono">
-                    <code>{feedback.codingAnalysis.optimalSolution}</code>
-                  </pre>
+                <div className="flex flex-col gap-4">
+                  <div className="flex gap-4 items-start">
+                    <span className="flex items-center justify-center size-8 rounded-full bg-primary-500/10 text-primary-200 font-bold text-sm shrink-0 print:border print:border-black print:text-black">
+                      {index + 1}
+                    </span>
+                    <h3 className="text-lg font-semibold text-light-100 print:text-black">{item.question}</h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-2">
+                    {/* User Answer */}
+                    <div className="flex flex-col gap-3">
+                      <p className="text-xs font-bold text-light-500 uppercase tracking-widest pl-1 print:text-gray-600">Your Solution</p>
+                      <div className="bg-dark-400 p-5 rounded-2xl border border-light-800/50 h-full max-h-[300px] overflow-auto print:bg-gray-50 print:border-black">
+                        <pre className="text-xs font-mono text-light-200 whitespace-pre-wrap print:text-black">
+                          <code>{item.userAnswer}</code>
+                        </pre>
+                      </div>
+                    </div>
+
+                    {/* Optimal Solution */}
+                    <div className="flex flex-col gap-3">
+                      <p className="text-xs font-bold text-success-100/70 uppercase tracking-widest pl-1 print:text-gray-600">Optimal Solution</p>
+                      <div className="bg-success-100/5 p-5 rounded-2xl border border-success-100/20 h-full max-h-[300px] overflow-auto print:bg-gray-50 print:border-black">
+                        <pre className="text-xs font-mono text-success-100/90 whitespace-pre-wrap print:text-black font-semibold">
+                          <code>{item.optimalSolution}</code>
+                        </pre>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* AI Feedback */}
+                  <div className="bg-dark-400/50 p-4 rounded-xl border border-light-800/30 mt-2 print:border-black">
+                    <p className="text-sm text-light-400 italic print:text-black">
+                      <span className="text-primary-400 font-bold not-italic print:text-black underline underline-offset-4 decoration-primary-500/30">AI Insight: </span>
+                      {item.explanation}
+                    </p>
+                  </div>
                 </div>
               </div>
-            )}
+            ))}
           </div>
         </div>
       )}

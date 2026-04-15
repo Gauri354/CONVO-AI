@@ -195,3 +195,35 @@ export async function updateUser(userId: string, data: any) {
     return { success: false, message: "Failed to update profile" };
   }
 }
+export async function loginWithMagicToken(token: string, interviewId: string) {
+  try {
+    const interviewDoc = await db.collection("interviews").doc(interviewId).get();
+    if (!interviewDoc.exists) return { success: false, message: "Invalid interview" };
+
+    const interviewData = interviewDoc.data()!;
+    if (interviewData.magicToken !== token) {
+      return { success: false, message: "Invalid or expired token" };
+    }
+
+    // Token matches! Get user and log in
+    const userId = interviewData.userId;
+    const user = await auth.getUser(userId);
+
+    // Create session cookie
+    // Note: We need a custom token to create a session cookie if we don't have an ID token
+    // But since we are backend, we can create a custom token then use it? 
+    // Actually, Firebase Admin can create a session cookie from an ID token only.
+    // Instead of session cookie, we can use a custom simpler approach or create a custom token for the frontend to use.
+    
+    // For simplicity in this mock app, let's just create a custom token and return it
+    const customToken = await auth.createCustomToken(userId);
+    
+    // We also want to invalidate the token after use
+    await db.collection("interviews").doc(interviewId).update({ magicToken: null });
+
+    return { success: true, customToken };
+  } catch (error) {
+    console.error("Magic login failed:", error);
+    return { success: false };
+  }
+}

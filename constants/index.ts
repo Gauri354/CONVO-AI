@@ -346,30 +346,12 @@ export const dummyInterviews: Interview[] = [
 
 export const interviewTemplates = [
   {
-    id: "template-fullstack",
-    role: "Full Stack Developer",
-    focus: "React, Node.js, System Design",
+    id: "template-web-dev",
+    role: "Web Development",
+    focus: "React, Node.js, Full Stack Architecture",
     level: "Intermediate",
     duration: "45 mins",
     techstack: ["React", "Node.js", "MongoDB", "Express"],
-    type: "Technical",
-  },
-  {
-    id: "template-backend",
-    role: "Backend Developer",
-    focus: "APIs, Databases, Scalability",
-    level: "Intermediate",
-    duration: "40 mins",
-    techstack: ["Node.js", "PostgreSQL", "Redis", "Docker"],
-    type: "Technical",
-  },
-  {
-    id: "template-frontend",
-    role: "Frontend Developer",
-    focus: "UI/UX, Performance, React",
-    level: "Intermediate",
-    duration: "35 mins",
-    techstack: ["React", "Next.js", "Tailwind CSS", "TypeScript"],
     type: "Technical",
   },
   {
@@ -389,24 +371,6 @@ export const interviewTemplates = [
     duration: "20 mins",
     techstack: ["Soft Skills", "Communication"],
     type: "Behavioral",
-  },
-  {
-    id: "template-system-design",
-    role: "System Design",
-    focus: "Architecture, Scalability, Trade-offs",
-    level: "Senior",
-    duration: "60 mins",
-    techstack: ["Architecture", "Distributed Systems"],
-    type: "Technical",
-  },
-  {
-    id: "template-dsa",
-    role: "Data Structures & Algorithms",
-    focus: "Problem Solving, Efficiency",
-    level: "Intermediate",
-    duration: "45 mins",
-    techstack: ["Algorithms", "Data Structures"],
-    type: "Technical",
   },
   {
     id: "template-behavioral",

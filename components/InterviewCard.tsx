@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import Link from "next/link";
 import Image from "next/image";
-import { LayoutTemplate, Server, Layers, Smartphone, Cloud, Database, Shield, BrainCircuit, Users, Network, Code } from "lucide-react";
+import { LayoutTemplate, Server, Layers, Smartphone, Cloud, Database, Shield, BrainCircuit, Users, Network, Code, BarChart, Clock } from "lucide-react";
 
 import { Button } from "./ui/button";
 import DisplayTechIcons from "./DisplayTechIcons";
@@ -19,6 +19,10 @@ const InterviewCard = async ({
   createdAt,
   status,
   currentQuestionIndex,
+  level,
+  focus,
+  duration,
+  scheduledAt,
 }: InterviewCardProps) => {
   const feedback =
     userId && interviewId
@@ -37,9 +41,9 @@ const InterviewCard = async ({
       Technical: "bg-light-800",
     }[normalizedType] || "bg-light-600";
 
-  const formattedDate = dayjs(
-    feedback?.createdAt || createdAt || Date.now()
-  ).format("MMM D, YYYY");
+  const formattedDate = status === "scheduled" && scheduledAt
+    ? dayjs(scheduledAt).format("MMM D, YYYY • h:mm A")
+    : dayjs(feedback?.createdAt || createdAt || Date.now()).format("MMM D, YYYY");
 
   const isCancelled = status === "cancelled";
 
@@ -81,30 +85,35 @@ const InterviewCard = async ({
           {/* Interview Role */}
           <h3 className="mt-5 capitalize">{role} Interview</h3>
 
-          {/* Date & Score */}
-          <div className="flex flex-row gap-5 mt-3">
-            <div className="flex flex-row gap-2">
-              <Image
-                src="/calendar.svg"
-                width={22}
-                height={22}
-                alt="calendar"
-              />
-              <p>{formattedDate}</p>
+          {/* Focus */}
+          <p className="text-sm text-primary-200 mt-1 font-medium">{focus || formattedDate}</p>
+
+          {/* Info Row (Level & Duration/Score) */}
+          <div className="flex flex-row gap-5 mt-4">
+            <div className="flex flex-row gap-2 items-center">
+              <BarChart size={18} className="text-light-400" />
+              <p className="text-sm">{level || "Intermediate"}</p>
             </div>
 
             <div className="flex flex-row gap-2 items-center">
-              <Image src="/star.svg" width={22} height={22} alt="star" />
-              <p>
+              <Clock size={18} className="text-light-400" />
+              <p className="text-sm">
                 {status === "in-progress"
                   ? `Q ${(currentQuestionIndex || 0) + 1} / 5`
-                  : `${feedback?.totalScore || "---"}/100`}
+                  : duration || "30 mins"}
               </p>
             </div>
+            
+            {feedback && (
+                <div className="flex flex-row gap-2 items-center">
+                    <Image src="/star.svg" width={18} height={18} alt="star" />
+                    <p className="text-sm font-bold text-primary-500">{feedback.totalScore}/100</p>
+                </div>
+            )}
           </div>
 
           {/* Feedback or Placeholder Text */}
-          <p className="line-clamp-2 mt-5">
+          <p className="line-clamp-2 mt-5 text-light-400 text-sm">
             {isCancelled
               ? "This interview has been cancelled."
               : feedback?.finalAssessment ||
@@ -112,7 +121,7 @@ const InterviewCard = async ({
           </p>
         </div>
 
-        <div className="flex flex-row gap-2">
+        <div className="flex flex-row justify-between items-end mt-auto">
           <DisplayTechIcons techStack={techstack} />
 
           <div className="flex flex-col gap-2">
@@ -133,7 +142,7 @@ const InterviewCard = async ({
             </Button>
 
             {feedback && (
-              <Button className="btn-secondary text-xs py-1 h-8" asChild>
+              <Button variant="ghost" className="text-xs py-1 h-8 text-primary-400 hover:text-primary-200" asChild>
                 <Link href={`/interview/${interviewId}`}>
                   Retake Interview
                 </Link>

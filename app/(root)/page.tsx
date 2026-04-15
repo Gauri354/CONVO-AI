@@ -14,6 +14,7 @@ import nextDynamic from "next/dynamic";
 import HeroBackground from "@/components/HeroBackground";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const TemplateInterviewCard = nextDynamic(() => import("@/components/TemplateInterviewCard"), {
   loading: () => (
@@ -32,8 +33,7 @@ async function Home() {
   const userInterviews = user ? await getInterviewsByUserId(user.id) : [];
 
   const scheduledInterviews = userInterviews?.filter((i: Interview) => i.status === "scheduled") || [];
-  const inProgressInterviews = userInterviews?.filter((i: Interview) => i.status === "in-progress") || [];
-  const pastInterviews = userInterviews?.filter((i: Interview) => i.status === "completed" || i.finalized) || [];
+  const pastInterviews = userInterviews?.filter((i: Interview) => i.status !== "scheduled") || [];
 
   return (
     <>
@@ -98,34 +98,14 @@ async function Home() {
                   createdAt={interview.createdAt}
                   status={interview.status}
                   currentQuestionIndex={interview.currentQuestionIndex}
+                  focus={interview.focus}
+                  level={interview.level}
+                  duration={interview.duration}
+                  scheduledAt={interview.scheduledAt}
                 />
               ))
             ) : (
               <p className="text-light-400">No scheduled interviews</p>
-            )}
-          </div>
-        </section>
-
-        {/* In-Progress Interviews */}
-        <section className="flex flex-col gap-6">
-          <h2>In-Progress Interviews</h2>
-          <div className="interviews-section">
-            {inProgressInterviews.length > 0 ? (
-              inProgressInterviews.map((interview) => (
-                <InterviewCard
-                  key={interview.id}
-                  userId={user?.id}
-                  interviewId={interview.id}
-                  role={interview.role}
-                  type={interview.type}
-                  techstack={interview.techstack}
-                  createdAt={interview.createdAt}
-                  status={interview.status}
-                  currentQuestionIndex={interview.currentQuestionIndex}
-                />
-              ))
-            ) : (
-              <p className="text-light-400">No interviews in progress</p>
             )}
           </div>
         </section>
@@ -146,6 +126,10 @@ async function Home() {
                   createdAt={interview.createdAt}
                   status={interview.status}
                   currentQuestionIndex={interview.currentQuestionIndex}
+                  focus={interview.focus}
+                  level={interview.level}
+                  duration={interview.duration}
+                  scheduledAt={interview.scheduledAt}
                 />
               ))
             ) : (

@@ -233,7 +233,7 @@
   }
 
   .card-border {
-    @apply border-gradient p-0.5 rounded-2xl w-fit;
+    @apply border-gradient p-0.5 rounded-2xl w-full;
   }
 
   .card {
@@ -317,7 +317,7 @@
   }
 
   .root-layout {
-    @apply flex mx-auto max-w-7xl flex-col gap-12 my-12 px-16 max-sm:px-4 max-sm:my-8;
+    @apply flex mx-auto max-w-[1600px] flex-col gap-12 my-12 px-16 max-sm:px-4 max-sm:my-8;
   }
 
   .card-cta {

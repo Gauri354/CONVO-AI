@@ -32,6 +32,8 @@ const InterviewSetupFlow = ({ userId, userName }: { userId: string; userName: st
     const role = searchParams.get("role");
     const level = searchParams.get("level");
     const techstack = searchParams.get("techstack");
+    const focus = searchParams.get("focus");
+    const duration = searchParams.get("duration");
     const shortcut = searchParams.get("shortcut");
 
     if (shortcut === "true" && role && !hasStarted) {
@@ -41,6 +43,8 @@ const InterviewSetupFlow = ({ userId, userName }: { userId: string; userName: st
         company: "",
         level: level || "Junior",
         techStack: techstack || "",
+        focus: focus || "",
+        duration: duration || "30 mins",
       };
       setDetails(directDetails);
       setInterviewType("AI");
@@ -95,18 +99,31 @@ const InterviewSetupFlow = ({ userId, userName }: { userId: string; userName: st
     }
   };
 
+  const [scheduledAt, setScheduledAt] = useState("");
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
   const handleFinish = async (
     scheduleType: "NOW" | "LATER",
     overrideDetails?: typeof details,
     overrideType?: typeof interviewType
   ) => {
+    if (scheduleType === "LATER" && !showTimePicker) {
+      setShowTimePicker(true);
+      return;
+    }
+
+    if (scheduleType === "LATER" && !scheduledAt) {
+      toast.error("Please select a date and time for your interview");
+      return;
+    }
+
     const currentDetails = overrideDetails || details;
     const currentType = overrideType || interviewType;
 
     const loadingToast = toast.loading(scheduleType === "NOW" ? "Preparing interview..." : "Scheduling interview...");
 
     try {
-      console.log("[SetupFlow] Creating interview...", { currentType, scheduleType });
+      console.log("[SetupFlow] Creating interview...", { currentType, scheduleType, scheduledAt });
       const result = await createInterview({
         role: currentDetails.role || (currentType === "RESUME" ? "Resume-Based Interview" : ""),
         level: currentDetails.level,
@@ -116,6 +133,9 @@ const InterviewSetupFlow = ({ userId, userName }: { userId: string; userName: st
         status: scheduleType === "NOW" ? "in-progress" : "scheduled",
         questions: [],
         resumeText: resumeText || "",
+        focus: (currentDetails as any).focus || "",
+        duration: (currentDetails as any).duration || "",
+        scheduledAt: scheduleType === "LATER" ? scheduledAt : null,
       });
 
       toast.dismiss(loadingToast);
@@ -232,17 +252,46 @@ const InterviewSetupFlow = ({ userId, userName }: { userId: string; userName: st
 
         {step === "SCHEDULE" && (
           <div className="flex flex-col gap-6">
-            <h3>Final Step: Schedule</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Button onClick={() => handleFinish("NOW")} className="btn-primary flex gap-2 items-center justify-center py-8">
-                <Brain size={20} />
-                <span>Start Now</span>
-              </Button>
-              <Button onClick={() => handleFinish("LATER")} className="btn-secondary flex gap-2 items-center justify-center py-8">
-                <Calendar size={20} />
-                <span>Schedule Later</span>
-              </Button>
-            </div>
+            <h3>{showTimePicker ? "Select Date & Time" : "Final Step: Schedule"}</h3>
+            
+            {showTimePicker ? (
+              <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <div className="flex flex-col gap-2">
+                  <Label>Interview Date & Time</Label>
+                  <div className="relative">
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-light-400 size-5 pointer-events-none" />
+                    <Input
+                      type="datetime-local"
+                      value={scheduledAt}
+                      onChange={(e) => setScheduledAt(e.target.value)}
+                      className="input pl-12 active:border-primary-200"
+                      min={new Date().toISOString().slice(0, 16)}
+                    />
+                  </div>
+                  <p className="text-xs text-light-400">Select when you'd like to have your mock interview session.</p>
+                </div>
+
+                <div className="flex gap-4">
+                  <Button onClick={() => setShowTimePicker(false)} variant="ghost" className="flex-1 text-light-400 border border-dark-200">
+                    Cancel
+                  </Button>
+                  <Button onClick={() => handleFinish("LATER")} className="btn-primary flex-1">
+                    Confirm Schedule
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Button onClick={() => handleFinish("NOW")} className="btn-primary flex gap-2 items-center justify-center py-8">
+                  <Brain size={20} />
+                  <span>Start Now</span>
+                </Button>
+                <Button onClick={() => handleFinish("LATER")} className="btn-secondary flex gap-2 items-center justify-center py-8">
+                  <Calendar size={20} />
+                  <span>Schedule Later</span>
+                </Button>
+              </div>
+            )}
           </div>
         )}
 

@@ -11,11 +11,15 @@ interface Feedback {
   areasForImprovement: string[];
   finalAssessment: string;
   createdAt: string;
-  codingAnalysis?: {
-    isOptimal: boolean;
-    explanation: string;
+  codingDetailedAnalysis?: Array<{
+    question: string;
+    userAnswer: string;
+    isCorrect: boolean;
     optimalSolution: string;
-  };
+    explanation: string;
+    score: number;
+  }>;
+  codingOverallScore?: number;
   resumeAlignment?: string;
 }
 
@@ -32,6 +36,12 @@ interface Interview {
   status?: "scheduled" | "in-progress" | "cancelled" | "completed";
   currentQuestionIndex?: number;
   resumeText?: string;
+  focus?: string;
+  duration?: string;
+  scheduledAt?: string;
+  codingQuestions?: string[];
+  codingAnswers?: Record<string, string>;
+  codingRoundCompleted?: boolean;
 }
 
 interface CreateFeedbackParams {
@@ -62,6 +72,10 @@ interface InterviewCardProps {
   createdAt?: string;
   status?: "scheduled" | "in-progress" | "cancelled" | "completed";
   currentQuestionIndex?: number;
+  level?: string;
+  focus?: string;
+  duration?: string;
+  scheduledAt?: string;
 }
 
 interface AgentProps {
