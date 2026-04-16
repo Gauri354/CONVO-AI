@@ -125,13 +125,40 @@ export async function createInterview(params: any) {
   const { role, level, techstack, type, userId, questions, status, resumeText, scheduledAt } = params;
 
   try {
-    // Get user details for email notification
+    // Get user details for quota and notification
     let userEmail = "";
     try {
       const userRecord = await adminAuth.getUser(userId);
       userEmail = userRecord.email || "";
     } catch (e) {
       console.warn("Could not fetch user email for notification", e);
+    }
+
+    // Subscription & Limit Logic
+    const userDocRef = db.collection("users").doc(userId);
+    const userDoc = await userDocRef.get();
+    if (!userDoc.exists) throw new Error("User profile not found.");
+    
+    const userData = userDoc.data()!;
+    const plan = userData.subscriptionPlan || "FREE";
+    
+    // Rule 1: Resume-Based -> Must be PRO
+    if (resumeText && resumeText.trim().length > 0 && plan !== "PRO") {
+      throw new Error("Resume-based interviews require an active PRO subscription.");
+    }
+
+    // Rule 2: Free Tier -> 3 Interviews / Day
+    const today = new Date().toISOString().split("T")[0];
+    let count = userData.interviewCountToday || 0;
+    let lastDate = userData.lastInterviewDate || today;
+
+    if (lastDate !== today) {
+      count = 0;
+      lastDate = today;
+    }
+
+    if (plan === "FREE" && count >= 3) {
+      throw new Error("You've reached your free limit of 3 interviews per day. Upgrade to PRO for unlimited practice!");
     }
 
     let interviewQuestions = questions || [];
@@ -153,6 +180,12 @@ export async function createInterview(params: any) {
     };
 
     const docRef = await db.collection("interviews").add(interview);
+
+    // Update user interview daily quota
+    await userDocRef.update({
+      interviewCountToday: count + 1,
+      lastInterviewDate: today,
+    });
 
     // Send notification email if scheduled for later
     if (status === "scheduled" && userEmail && scheduledAt) {

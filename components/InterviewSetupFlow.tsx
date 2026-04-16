@@ -8,11 +8,12 @@ import { Label } from "./ui/label";
 import { toast } from "sonner";
 import { createInterview } from "@/lib/actions/general.action";
 import { extractResumeText } from "@/lib/actions/resume.action";
-import { Upload, Brain, Calendar, ArrowRight, ArrowLeft } from "lucide-react";
+import { Upload, Brain, Calendar, ArrowRight, ArrowLeft, Lock } from "lucide-react";
+import UpgradeModal from "./UpgradeModal";
 
 type Step = "TYPE_SELECTION" | "RESUME_UPLOAD" | "SETUP_DETAILS" | "SCHEDULE";
 
-const InterviewSetupFlow = ({ userId, userName }: { userId: string; userName: string }) => {
+const InterviewSetupFlow = ({ userId, userName, subscriptionPlan = "FREE" }: { userId: string; userName: string, subscriptionPlan?: string }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [step, setStep] = useState<Step>("TYPE_SELECTION");
@@ -25,6 +26,9 @@ const InterviewSetupFlow = ({ userId, userName }: { userId: string; userName: st
     level: "Junior",
     techStack: "",
   });
+
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
 
   const [hasStarted, setHasStarted] = useState(false);
 
@@ -161,6 +165,7 @@ const InterviewSetupFlow = ({ userId, userName }: { userId: string; userName: st
 
   return (
     <div className="max-w-2xl mx-auto mt-10 p-8 card-border">
+      <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} />
       <div className="card p-8 flex flex-col gap-8">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold">Setup Your Interview</h2>
@@ -183,14 +188,27 @@ const InterviewSetupFlow = ({ userId, userName }: { userId: string; userName: st
                 </div>
               </button>
               <button
-                onClick={() => setInterviewType("RESUME")}
-                className={`p-6 rounded-xl border-2 transition-all flex flex-col items-center gap-4 ${interviewType === "RESUME" ? "border-primary-200 bg-primary-200/10" : "border-dark-200 hover:border-light-600"
-                  }`}
+                onClick={() => {
+                  if (subscriptionPlan !== "PRO") {
+                    setShowUpgradeModal(true);
+                  } else {
+                    setInterviewType("RESUME");
+                  }
+                }}
+                className={`p-6 rounded-xl border-2 transition-all flex flex-col items-center gap-4 relative overflow-hidden ${interviewType === "RESUME" ? "border-primary-200 bg-primary-200/10" : "border-dark-200 hover:border-light-600"} ${subscriptionPlan !== "PRO" ? "opacity-90 saturate-50 cursor-pointer" : ""}`}
               >
-                <Upload size={48} className="text-primary-200" />
+                {subscriptionPlan !== "PRO" && (
+                  <div className="absolute top-2 right-2 bg-dark-200 text-light-300 rounded-full p-1 border border-dark-300">
+                    <Lock size={14} />
+                  </div>
+                )}
+                <Upload size={48} className={subscriptionPlan !== "PRO" ? "text-light-500" : "text-primary-200"} />
                 <div className="text-center">
-                  <p className="font-bold">Resume-Based</p>
-                  <p className="text-xs text-light-400">Tailored to your experience</p>
+                  <div className="flex items-center justify-center gap-2">
+                    <p className="font-bold">Resume-Based</p>
+                    {subscriptionPlan !== "PRO" && <span className="bg-primary-500/20 text-primary-400 text-[10px] px-2 py-0.5 rounded uppercase font-bold">PRO</span>}
+                  </div>
+                  <p className="text-xs text-light-400 mt-1">Tailored to your experience</p>
                 </div>
               </button>
             </div>

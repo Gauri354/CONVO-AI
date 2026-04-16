@@ -8,6 +8,8 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { User, Save } from "lucide-react";
+import Image from "next/image";
+import { useRef } from "react";
 
 interface ProfileFormProps {
   user: {
@@ -16,6 +18,7 @@ interface ProfileFormProps {
     email: string;
     gender: "male" | "female";
     careerStage: string;
+    profileImage?: string;
   };
 }
 
@@ -26,7 +29,23 @@ const ProfileForm = ({ user }: ProfileFormProps) => {
     name: user.name,
     gender: user.gender,
     careerStage: user.careerStage,
+    profileImage: user.profileImage || (user.gender === "female" ? "/female-avatar.png" : "/user-avatar.png"),
   });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, profileImage: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const defaultAvatars = ["/user-avatar.png", "/female-avatar.png", "/ai-avatar.png", "/robot.png"];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +64,59 @@ const ProfileForm = ({ user }: ProfileFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+      {/* Profile Picture Header */}
+      <div className="flex flex-col md:flex-row gap-6 items-center border-b border-light-800 pb-8">
+        <div className="relative shrink-0">
+          <Image
+            src={formData.profileImage}
+            alt="profile"
+            width={100}
+            height={100}
+            className="rounded-full border-4 border-primary-200/20 object-cover w-[100px] h-[100px]"
+          />
+          <div className="absolute bottom-1 right-1 w-6 h-6 bg-success-100 border-4 border-dark-100 rounded-full"></div>
+        </div>
+        <div className="flex flex-col gap-4 flex-1 w-full">
+          <div>
+            <h2 className="text-2xl font-bold">{formData.name}</h2>
+            <p className="text-light-400 capitalize">{formData.careerStage} • {formData.gender}</p>
+          </div>
+          
+          <div className="flex flex-wrap items-center justify-between w-full gap-4">
+            <div className="flex gap-2">
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/*" 
+                onChange={handleFileChange} 
+              />
+              <Button
+                type="button"
+                className="bg-dark-200 text-light-100 hover:bg-dark-300"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                Upload Photo
+              </Button>
+            </div>
+
+            <div className="flex gap-2 items-center">
+              <span className="text-sm text-light-400 mr-2 max-sm:hidden">Or select preset:</span>
+              {defaultAvatars.map((avatar) => (
+                <button
+                  key={avatar}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, profileImage: avatar })}
+                  className={`size-10 rounded-full border-2 overflow-hidden hover:scale-110 transition-transform ${formData.profileImage === avatar ? 'border-primary-500' : 'border-transparent'}`}
+                >
+                  <Image src={avatar} alt="avatar" width={40} height={40} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Name */}
         <div className="flex flex-col gap-2">

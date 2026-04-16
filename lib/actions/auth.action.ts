@@ -129,6 +129,10 @@ export async function verifyOtpAndLogin(params: { email: string; otp: string; na
         email: normalizedEmail,
         isEmailVerified: true,
         createdAt: new Date().toISOString(),
+        subscriptionPlan: "FREE",
+        subscriptionStatus: "ACTIVE",
+        interviewCountToday: 0,
+        lastInterviewDate: new Date().toISOString().split("T")[0],
       });
     } else {
       // Sign in check
@@ -167,6 +171,10 @@ export async function getCurrentUser() {
         email: decodedClaims.email || "",
         isEmailVerified: true,
         createdAt: new Date().toISOString(),
+        subscriptionPlan: "FREE",
+        subscriptionStatus: "ACTIVE",
+        interviewCountToday: 0,
+        lastInterviewDate: new Date().toISOString().split("T")[0],
       };
       await db.collection("users").doc(decodedClaims.uid).set(basicUser);
       return JSON.parse(JSON.stringify({ id: decodedClaims.uid, ...basicUser }));

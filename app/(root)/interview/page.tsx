@@ -14,6 +14,7 @@ export default async function Page() {
       <InterviewSetupFlow
         userName={user.name}
         userId={user.id}
+        subscriptionPlan={user.subscriptionPlan || "FREE"}
       />
     </div>
   );
