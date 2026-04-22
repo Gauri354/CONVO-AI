@@ -27,6 +27,10 @@ const Navbar = ({ user }: NavbarProps) => {
         {
             label: "Reports",
             route: "/reports", // Assuming this route exists or will exist based on file structure
+        },
+        {
+            label: "Aptitude Prep",
+            route: "/aptitude",
         }
     ];
 
