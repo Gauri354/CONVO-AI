@@ -52,7 +52,7 @@ export default function UpgradeModal({
       toast.dismiss(toastId);
 
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder",
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_SiDmypXhC9EgFA",
         amount: orderData.amount,
         currency: orderData.currency,
         name: "SmartInterview PRO",

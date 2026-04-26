@@ -3,8 +3,8 @@ import Razorpay from "razorpay";
 import { getCurrentUser } from "@/lib/actions/auth.action";
 
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_placeholder",
-  key_secret: process.env.RAZORPAY_KEY_SECRET || "placeholder_secret",
+  key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_SiDmypXhC9EgFA",
+  key_secret: process.env.RAZORPAY_KEY_SECRET || "IJv1ipwNvgcyclqW9awrqUGw",
 });
 
 export async function POST(req: Request) {
@@ -20,7 +20,8 @@ export async function POST(req: Request) {
     const options = {
       amount,
       currency: "INR",
-      receipt: `receipt_${user.id}_${Date.now()}`,
+      // Razorpay receipt max length is 40 characters
+      receipt: `rcp_${user.id.substring(0, 10)}_${Date.now().toString().slice(-8)}`,
     };
 
     const order = await razorpay.orders.create(options);

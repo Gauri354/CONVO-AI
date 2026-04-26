@@ -12,12 +12,20 @@ export async function POST(req: Request) {
 
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = await req.json();
 
-    const secret = process.env.RAZORPAY_KEY_SECRET || "placeholder_secret";
+    const secret = process.env.RAZORPAY_KEY_SECRET || "IJv1ipwNvgcyclqW9awrqUGw";
     
     // Verify signature
     const shasum = crypto.createHmac("sha256", secret);
     shasum.update(`${razorpay_order_id}|${razorpay_payment_id}`);
     const digest = shasum.digest("hex");
+
+    console.log("Verify Signature Debug:", {
+      razorpay_order_id,
+      razorpay_payment_id,
+      received_signature: razorpay_signature,
+      expected_digest: digest,
+      secretPrefix: secret.substring(0, 4) // check if it loaded placeholder
+    });
 
     if (digest !== razorpay_signature) {
       return NextResponse.json({ error: "Transaction not legit!" }, { status: 400 });
